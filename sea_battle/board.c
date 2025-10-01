@@ -1,5 +1,7 @@
-#include <stdio.h>
-#define FIELD_HEIGHT 10
+#include <stdio.h> // ? зачем
+#include "board.h"
+
+/* #define FIELD_HEIGHT 10
 #define FIELD_WEIGHT 10
 
 int main(void) {
@@ -10,3 +12,7 @@ int main(void) {
 
     return 0;
 }
+
+сам писал 
+
+*/
