@@ -3,19 +3,26 @@
 
 //#include standart libraries and other headers
 
-typedef struct { //используем typedef чтобы при упоминании не писать каждый раз ключевое слово struct
-    int window_width;      // ??? какого окна? Ширина окна
-    int window_height;     // Высота окна  
-    const char* title;     // Заголовок окна
-    int cell_size;         // Размер клетки поля
+typedef struct { // схема к основному окну 
+    int window_width;      // 1024
+    int window_height;     // 768 
+    int cell_size;         
     int grid_size;         // Размер сетки (10 для морского боя)
     int fps;               // Кадры в секунду
-} GameConfig;  // ????????????? точнее про что !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+} GameConfig;  
 
+typedef struct { // центральный "мозг"
+    GameConfig config;           
+    GraphicsContext graphics;    
+    int game_is_running;         // Флаг: 1 - игра работает, 0 - пора выходить
+    // TODO: Здесь позже добавим игровые поля, меню, статус и т.д.
+} Game;
 
-
-Game init_game(void);   // ни одна из них ещё не писалась
-void update_game(Game* game);
+Game init_game(void);            // Создает и настраивает структуру Game "с нуля"
+void handle_events(Game* game);  // Обрабатывает все события (ввод пользователя)
+void update_game(Game* game);    // Обновляет логику игры
+void render_game(Game* game);    // Отрисовывает кадр (вызывает функции из graphics.c)
+void cleanup_game(Game* game);   // Корректно освобождает ресурсы (память, SDL)
 
 
 #endif

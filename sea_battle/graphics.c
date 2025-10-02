@@ -2,7 +2,7 @@
 
 
 
-SDL_Window* create_game_window(WindowConfig config) {     // ??? вообще всё разбирать нннадо!!!!!!!!!!!!!!!!!!
+SDL_Window* create_game_window(WindowConfig config) {  
     return SDL_CreateWindow(
         config.title,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,

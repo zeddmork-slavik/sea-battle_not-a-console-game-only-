@@ -6,22 +6,21 @@
 #include "game.h"  // Чтобы видеть WindowConfig
 
 
-typedef struct {
-    int width, height; // ? чего
-    const char* title; // ? what
-    int cell_size;         // ? Размер клетки поля
-} WindowConfig;  // ?? тоже интересно куда
+typedef struct { // пока очень похож на GameConfig(без сетки и fps) но в будущем...
+    int width, height; 
+    int cell_size;         
+} WindowConfig;  
 
-typedef struct {
-    SDL_Window* window; // непрозрачная структура из SDL, экземпляр создаётся в main 2. (это главное окно)
-    SDL_Renderer* renderer; // непрозрачная структура из SDL, экземпляр создаётся в main 3.
-    int cell_size; // размер клетки поля в пикселях
-} GraphicsContext; // ??? куда ты?
+typedef struct { // рендерер, главное окно и размер игровой клетки поля в пикселях
+    SDL_Window* window; // главное окно
+    SDL_Renderer* renderer; // рисовальщик
+    int cell_size; // размер игровой клетки поля в пикселях, cell_size = 30 каждая клетка игрового поля будет занимать 30×30 пикселей на экране.
+} GraphicsContext; 
 
 
 
 SDL_Window* create_game_window(WindowConfig config)
 GraphicsContext init_graphics(WindowConfig win_config);
-void render_game(GraphicsContext ctx, Game* game);   // сама функция ещё не реализована ??? структуру гейм ещё не видел
+void render_game(GraphicsContext ctx, Game* game);   // сама функция ещё не реализована 
 void cleanup_graphics(GraphicsContext ctx); // сама фугкция ещё не реализована
 #endif

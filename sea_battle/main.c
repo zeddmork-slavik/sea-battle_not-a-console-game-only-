@@ -11,9 +11,10 @@ int main() {
         return 1; //SDL_GetError - функция для получения текстового человекочитаемого описания ошибки
     }
     
-    // 2. Создание окна
+    SDL_Window* window = create_game_window(config);
     SDL_Window* window = SDL_CreateWindow( // SDL_Window - непрозрачная структура из SDL, 
-        //SDL_CreateWindow создаёт HWND (идентификатор окна для ОС)
+        //SDL_CreateWindow создаёт HWND (идентификатор окна для ОС) 
+        //экземпляр window заниимает мегабайты видеопамяти, это реальный объект в ОС который мы видим на экране
     "SEA BATTLE",              // Заголовок окна
     SDL_WINDOWPOS_CENTERED,  // Позиция нашего окна в рамках экрана от левого края X (CENTERED - центр)
     SDL_WINDOWPOS_CENTERED,  // Позиция Y от верха 
