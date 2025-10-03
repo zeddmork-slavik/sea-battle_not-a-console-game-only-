@@ -1,12 +1,11 @@
-#ifndef GAME_H
+/*#ifndef GAME_H
 #define GAME_H
 
 //#include standart libraries and other headers
+#include "graphics.h"
 
 typedef struct { // схема к основному окну 
-    int window_width;      // 1024
-    int window_height;     // 768 
-    int cell_size;         
+    WindowConfig config;       
     int grid_size;         // Размер сетки (10 для морского боя)
     int fps;               // Кадры в секунду
 } GameConfig;  
@@ -18,6 +17,8 @@ typedef struct { // центральный "мозг"
     // TODO: Здесь позже добавим игровые поля, меню, статус и т.д.
 } Game;
 
+
+// ни одна из функций ещё не реализована
 Game init_game(void);            // Создает и настраивает структуру Game "с нуля"
 void handle_events(Game* game);  // Обрабатывает все события (ввод пользователя)
 void update_game(Game* game);    // Обновляет логику игры
