@@ -1,7 +1,6 @@
 #define SDL_MAIN_HANDLED // иначе при компиляции ошибка "undefined reference to `WinMain'"
 #include <SDL2/SDL.h>
 #include <stdio.h>
-#include "board.h"
 #include "graphics.h"
 
 int main() {
@@ -26,12 +25,12 @@ int main() {
         return 1;
     }
     
-    GraphicsContext ctx = create_graphics_context(window, renderer, config);
+    GraphicsContext ctx = create_graphics_context(window, renderer);
 
     clear_screen(ctx);
-    draw_grid(ctx);
+    draw_game_boards(ctx);
     present_screen(ctx);
-    SDL_Delay(2000);  // задержка между обновлениями кадра 2 сек.
+    SDL_Delay(12000);  // задержка между обновлениями кадра 2 сек.
     
     // 5. Очистка
     cleanup_graphics(ctx);
