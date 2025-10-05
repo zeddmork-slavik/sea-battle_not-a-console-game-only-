@@ -37,6 +37,7 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.cell_size = CELL_SIZE; 
     ctx.ship_jup_1p = load_texture_from_file(renderer, "../images/ship_jup_1p.png");
     ctx.ship_jup_2p = load_texture_from_file(renderer, "../images/ship_jup_2p.png");
+    ctx.ship_jup_3p = load_texture_from_file(renderer, "../images/ship_jup_3p.png");
     ctx.ship_jup_4p = load_texture_from_file(renderer, "../images/ship_jup_4p.png");
     return ctx;
 }
@@ -77,7 +78,7 @@ void present_screen(GraphicsContext ctx) {
     SDL_RenderPresent(ctx.renderer);
 }
 
-void draw_game_boards(GraphicsContext ctx) {
+void draw_game_boards(GraphicsContext ctx, GameBoard player_board) {
     int field_size = GRID_SIZE * ctx.cell_size; // 10 × 50 = 500px
     
     // Вычисляем общую ширину двух сеток с отступами
@@ -98,12 +99,25 @@ void draw_game_boards(GraphicsContext ctx) {
     // Рисуем обе сетки
     draw_single_grid(ctx, player_x, offset_y, field_size);
     draw_single_grid(ctx, computer_x, offset_y, field_size);
-    //клетки начинаются с нуля
-    draw_ship(ctx, player_x, offset_y, 2, 5, 0, 1, ctx.ship_jup_1p);    // однопалубный
-    draw_ship(ctx, player_x, offset_y, 0, 0, 0, 2, ctx.ship_jup_2p);    // двухпалубный гориз.
-    draw_ship(ctx, player_x, offset_y, 4, 7, 1, 2, ctx.ship_jup_2p);    // двухпалубный вертик.
-    draw_ship(ctx, player_x, offset_y, 6, 2, 0, 4, ctx.ship_jup_4p);    // четырехпалубный гориз.
-    draw_ship(ctx, player_x, offset_y, 8, 4, 1, 4, ctx.ship_jup_4p); 
+    
+    for (int i = 0; i < player_board.ship_count; i++) {
+        Ship ship = player_board.ships[i];
+        SDL_Texture* texture;
+    
+        // Выбираем текстуру по количеству палуб
+        switch(ship.deck_count) {
+            case 1: texture = ctx.ship_jup_1p; break;
+            case 2: texture = ctx.ship_jup_2p; break; 
+            case 3: texture = ctx.ship_jup_3p; break;
+            case 4: texture = ctx.ship_jup_4p; break;
+            default: texture = NULL; break;
+        }
+    
+        if (texture) {
+            draw_ship(ctx, player_x, offset_y, ship.x, ship.y, 
+                 ship.direction, ship.deck_count, texture);
+        }
+    }
 }
 
 void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y, int field_size) {// offset - сдвиг
@@ -136,6 +150,7 @@ void draw_ship(GraphicsContext ctx, int base_x, int base_y, int grid_x, int grid
     SDL_QueryTexture(texture, NULL, NULL, &ship_width, &ship_height);
     
     SDL_Rect place_for_ship;
+    
     if (direction == 0) { // горизонтальный
         place_for_ship = (SDL_Rect){
             .x = base_x + grid_x * ctx.cell_size - (ship_width - deck_count * ctx.cell_size) / 2,
@@ -145,20 +160,14 @@ void draw_ship(GraphicsContext ctx, int base_x, int base_y, int grid_x, int grid
         };
     } else { // вертикальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + grid_x * ctx.cell_size - (ship_height - ctx.cell_size) / 2,
+            .x = base_x + 69 + grid_x * ctx.cell_size - (ship_height - ctx.cell_size) / 2, //хз почему 69 надо - вымерил на глаз - а нейронку глючит
             .y = base_y + grid_y * ctx.cell_size - (ship_width - deck_count * ctx.cell_size) / 2,
-            .w = ship_height,
-            .h = ship_width
+            .w = ship_width,  
+            .h = ship_height    
         };
     }
-    /*SDL_RenderCopyEx(
-    ctx.renderer,           // 1. Кто рисует - наш рисовальщик
-    ctx.ship_jup_2p,        // 2. Что рисовать - текстура кораблика
-    NULL,                   // 3. Какую часть текстуры (NULL = всю)
-    &place_for_ship,        // 4. Где рисовать - наш прямоугольник
-    angle,                  // 5. Угол поворота (90° для вертикального)
-    NULL,                   // 6. Точка вращения (NULL = центр)
-    SDL_FLIP_NONE           // 7. Отражение (без отражения)
-);*/
-SDL_RenderCopyEx(ctx.renderer, texture, NULL, &place_for_ship, angle, NULL, SDL_FLIP_NONE);
+    
+    // Ручная точка вращения - левый верхний угол
+    SDL_Point pivot = {0, 0};
+    SDL_RenderCopyEx(ctx.renderer, texture, NULL, &place_for_ship, angle, &pivot, SDL_FLIP_NONE);
 }

@@ -1,7 +1,8 @@
 #define SDL_MAIN_HANDLED // иначе при компиляции ошибка "undefined reference to `WinMain'"
 #include <SDL2/SDL.h>
-#include <stdio.h>
 #include "graphics.h"
+#include "board.h"
+#include "game.h"
 
 int main() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) { // подключение модулей SDL можно будет подключить аудио, Video (даёт доступ к SDL_CreateWindow и SDL_Renderer)
@@ -26,11 +27,8 @@ int main() {
     }
     
     GraphicsContext ctx = create_graphics_context(window, renderer);
-
-    clear_screen(ctx);
-    draw_game_boards(ctx);
-    present_screen(ctx);
-    SDL_Delay(12000);  // задержка между обновлениями кадра 2 сек.
+    
+    run_game(ctx);
     
     // 5. Очистка
     cleanup_graphics(ctx);

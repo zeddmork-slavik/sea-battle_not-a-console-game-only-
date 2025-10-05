@@ -4,6 +4,7 @@
 //#include standart libraries and other headers
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "board.h"
 #define WIDTH 1160
 #define HEIGHT 700
 #define CELL_SIZE 50
@@ -22,6 +23,7 @@ typedef struct { // рендерер, главное окно и размер и
     int cell_size; // размер игровой клетки поля в пикселях, каждая клетка игрового поля будет занимать cell_size Х cell_size пикселей на экране.
     SDL_Texture* ship_jup_1p;    // однопалубный
     SDL_Texture* ship_jup_2p;  // двухпалубный   
+    SDL_Texture* ship_jup_3p;
     SDL_Texture* ship_jup_4p;  // четырехпалубный 
 } GraphicsContext; 
 
@@ -30,7 +32,8 @@ WindowConfig create_default_config(void);
 SDL_Window* create_game_window(WindowConfig config);
 SDL_Renderer* create_game_renderer(SDL_Window* window); 
 GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* renderer);
-void draw_game_boards(GraphicsContext ctx);void cleanup_graphics(GraphicsContext ctx);
+void draw_game_boards(GraphicsContext ctx, GameBoard player_board);
+void cleanup_graphics(GraphicsContext ctx);
 void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y, int field_size);
 void clear_screen(GraphicsContext ctx); // Очистка экрана (заливка цветом)
 void present_screen(GraphicsContext ctx); // Показ нарисованного кадра
