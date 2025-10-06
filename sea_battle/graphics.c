@@ -1,11 +1,7 @@
 #include "graphics.h"
 
 WindowConfig create_default_config(void) {
-    WindowConfig config = {
-        .width = WIDTH,
-        .height = HEIGHT,
-    };
-    return config;
+    return (WindowConfig) {WIDTH, HEIGHT};
 }
 
 SDL_Window* create_game_window(WindowConfig config) 
@@ -35,6 +31,7 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.window = window;
     ctx.renderer = renderer;
     ctx.cell_size = CELL_SIZE; 
+    ctx.field_size = GRID_SIZE * CELL_SIZE;
     ctx.ship_jup_1p = load_texture_from_file(renderer, "../images/ship_jup_1p.png");
     ctx.ship_jup_2p = load_texture_from_file(renderer, "../images/ship_jup_2p.png");
     ctx.ship_jup_3p = load_texture_from_file(renderer, "../images/ship_jup_3p.png");
@@ -78,49 +75,33 @@ void present_screen(GraphicsContext ctx) {
     SDL_RenderPresent(ctx.renderer);
 }
 
-void draw_game_boards(GraphicsContext ctx, GameBoard player_board) {
-    int field_size = GRID_SIZE * ctx.cell_size; // 10 × 50 = 500px
+void draw_board(GraphicsContext ctx, int base_x, int base_y, GameBoard board, int show_ships) { 
     
-    // Вычисляем общую ширину двух сеток с отступами
-    int total_width = 2 * field_size + BETWEEN_GRIDS + 2 * EDGE;
+    draw_single_grid(ctx, base_x, base_y);
     
-    // Центрируем по горизонтали
-    int start_x = (WIDTH - total_width) / 2;  //просто добавляет лишние пиксили к EDGE  
-    
-    // Координаты левой сетки (игрок)
-    int player_x = start_x + EDGE;
-    
-    // Координаты правой сетки (компьютер)
-    int computer_x = player_x + field_size + BETWEEN_GRIDS;
-
-    // выставляем начало по вертикали
-    int offset_y = HEIGHT - field_size - EDGE;
-    
-    // Рисуем обе сетки
-    draw_single_grid(ctx, player_x, offset_y, field_size);
-    draw_single_grid(ctx, computer_x, offset_y, field_size);
-    
-    for (int i = 0; i < player_board.ship_count; i++) {
-        Ship ship = player_board.ships[i];
-        SDL_Texture* texture;
+    if (show_ships) {
+        for (int i = 0; i < board.ship_count; i++) {
+            Ship ship = board.ships[i];
+            SDL_Texture* texture;
     
         // Выбираем текстуру по количеству палуб
-        switch(ship.deck_count) {
-            case 1: texture = ctx.ship_jup_1p; break;
-            case 2: texture = ctx.ship_jup_2p; break; 
-            case 3: texture = ctx.ship_jup_3p; break;
-            case 4: texture = ctx.ship_jup_4p; break;
-            default: texture = NULL; break;
-        }
+            switch(ship.deck_count) {
+                case 1: texture = ctx.ship_jup_1p; break;
+                case 2: texture = ctx.ship_jup_2p; break; 
+                case 3: texture = ctx.ship_jup_3p; break;
+                case 4: texture = ctx.ship_jup_4p; break;
+                default: texture = NULL; break;
+            }
     
-        if (texture) {
-            draw_ship(ctx, player_x, offset_y, ship.x, ship.y, 
+            if (texture) {
+            draw_ship(ctx, base_x, base_y, ship.x, ship.y, 
                  ship.direction, ship.deck_count, texture);
+            }
         }
     }
 }
 
-void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y, int field_size) {// offset - сдвиг
+void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y) {// offset - сдвиг
     SDL_SetRenderDrawColor(ctx.renderer, 255, 255, 255, 255); // Белый цвет сетки
         
     // Рисуем вертикальные линии
@@ -128,7 +109,7 @@ void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y, int field
         SDL_RenderDrawLine(
             ctx.renderer,
             offset_x + x * ctx.cell_size, offset_y,           
-            offset_x + x * ctx.cell_size, offset_y + field_size 
+            offset_x + x * ctx.cell_size, offset_y + ctx.field_size 
         );
     }
     
@@ -137,7 +118,7 @@ void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y, int field
         SDL_RenderDrawLine(
         ctx.renderer,
         offset_x, offset_y + y * ctx.cell_size,           
-        offset_x + field_size, offset_y + y * ctx.cell_size 
+        offset_x + ctx.field_size, offset_y + y * ctx.cell_size 
         );
     }
 }
@@ -170,4 +151,38 @@ void draw_ship(GraphicsContext ctx, int base_x, int base_y, int grid_x, int grid
     // Ручная точка вращения - левый верхний угол
     SDL_Point pivot = {0, 0};
     SDL_RenderCopyEx(ctx.renderer, texture, NULL, &place_for_ship, angle, &pivot, SDL_FLIP_NONE);
+}
+
+void draw_cannon(GraphicsContext ctx, Cannon* cannon) {
+    // Опора
+    SDL_Rect base_rect = {
+        .x = cannon->base_x,      
+        .y = cannon->base_y,
+        .w = 176,
+        .h = 122
+    };
+    SDL_RenderCopy(ctx.renderer, cannon->canon_platform_texture, NULL, &base_rect);
+    
+    // Ствол
+    SDL_Rect barrel_rect = {
+        .x = cannon->base_x,
+        .y = cannon->base_y,  
+        .w = 176,
+        .h = 122
+    };
+    
+    SDL_Point pivot = {
+        .x = cannon->barrel_pivot_x,
+        .y = cannon->barrel_pivot_y
+    };
+    
+    SDL_RenderCopyEx(
+        ctx.renderer, 
+        cannon->canon_barrel_texture, 
+        NULL, 
+        &barrel_rect, 
+        cannon->current_angle,    
+        &pivot, 
+        SDL_FLIP_NONE
+    );
 }

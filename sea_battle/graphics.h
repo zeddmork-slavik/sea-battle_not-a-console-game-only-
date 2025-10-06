@@ -5,12 +5,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "board.h"
-#define WIDTH 1160
+#define WIDTH 1270
 #define HEIGHT 700
 #define CELL_SIZE 50
 #define GRID_SIZE 10
-#define EDGE 30
-#define BETWEEN_GRIDS 100
 
 
 typedef struct {
@@ -21,6 +19,7 @@ typedef struct { // рендерер, главное окно и размер и
     SDL_Window* window; // главное окно
     SDL_Renderer* renderer; // рисовальщик
     int cell_size; // размер игровой клетки поля в пикселях, каждая клетка игрового поля будет занимать cell_size Х cell_size пикселей на экране.
+    int field_size;
     SDL_Texture* ship_jup_1p;    // однопалубный
     SDL_Texture* ship_jup_2p;  // двухпалубный   
     SDL_Texture* ship_jup_3p;
@@ -32,13 +31,14 @@ WindowConfig create_default_config(void);
 SDL_Window* create_game_window(WindowConfig config);
 SDL_Renderer* create_game_renderer(SDL_Window* window); 
 GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* renderer);
-void draw_game_boards(GraphicsContext ctx, GameBoard player_board);
+void draw_board(GraphicsContext ctx, int base_x, int base_y, GameBoard board, int show_ships);
 void cleanup_graphics(GraphicsContext ctx);
-void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y, int field_size);
+void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y);
 void clear_screen(GraphicsContext ctx); // Очистка экрана (заливка цветом)
 void present_screen(GraphicsContext ctx); // Показ нарисованного кадра
 // НОВЫЕ функции для работы с текстурами
 SDL_Texture* load_texture_from_file(SDL_Renderer* renderer, const char* filename);
 void draw_ship(GraphicsContext ctx, int base_x, int base_y, int grid_x, int grid_y, 
                int direction, int deck_count, SDL_Texture* texture);
+void draw_cannon(GraphicsContext ctx, Cannon* cannon);
 #endif
