@@ -1,15 +1,15 @@
 #include "game.h"
 #include <SDL2/SDL.h>
 
-void run_game(GraphicsContext ctx) { //зарефакторить её нужно будет скоро
+void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //зарефакторить её нужно будет скоро
     GameState game = {0};
-    game.running = 1;
+    game.running = GAME_RUNNING;
     
     // Инициализация досок
     init_board(&game.player_board);
     init_board(&game.computer_board);
     
-    game.player_board.ships[0] = (Ship){2, 5, 0, 1, 0};
+    game.player_board.ships[0] = (Ship){2, 5, 0, 1, 0}; // вынесу попозже
     game.player_board.ships[1] = (Ship){0, 0, 0, 2, 0};
     game.player_board.ships[2] = (Ship){4, 7, 1, 2, 0};
     game.player_board.ships[3] = (Ship){6, 2, 0, 4, 0};
@@ -17,26 +17,17 @@ void run_game(GraphicsContext ctx) { //зарефакторить её нужн�
     game.player_board.ship_count = 5;
     
     SDL_Event event;
-    
-    while (game.running) {
+        while (game.running) {
         // Обработка событий
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                game.running = 0;
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    game.running = DONT_RUNNING;
             }
         }
-    int total_width = 2 * ctx.field_size + BETWEEN_GRIDS + 2 * EDGE;
-    int start_x = (WIDTH - total_width) / 2;  //просто добавляет лишние пиксили к EDGE  
-    // Координаты левой сетки (игрок)
-    int player_x = start_x + EDGE;
-    // Координаты правой сетки (компьютер)
-    int computer_x = player_x + ctx.field_size + BETWEEN_GRIDS;
-    // выставляем начало по вертикали
-    int offset_y = HEIGHT - ctx.field_size - EDGE;  
-        // Отрисовка
-    clear_screen(ctx);
-    draw_board(ctx, player_x, offset_y, game.player_board, 1);    // 1 - показываем корабли
-    draw_board(ctx, computer_x, offset_y, game.computer_board, 1);
+        // Отрисовка 
+    clear_screen(ctx);  // это имя указателя
+    draw_board(ctx, landmarks->player_x, landmarks->offset_y, game.player_board, SHOW_SHIPS); 
+    draw_board(ctx, landmarks->computer_x, landmarks->offset_y, game.computer_board, SHOW_SHIPS);
     
     init_cannon(&game.player_cannon, 1, player_x + ctx.field_size + 26, offset_y + 70, ctx.renderer); // 1 - поле игрока или нет, 26=20 корабли могут выступать из полей и 6 это половина остатков ширины after картинки, компа пока не вызываем
     draw_cannon(ctx, &game.player_cannon);
@@ -53,7 +44,7 @@ void init_cannon(Cannon* cannon, char is_player_cannon, int base_x, int base_y, 
     cannon->base_y = base_y;
     cannon->current_angle = 0;
     cannon->target_angle = 0;
-    cannon->is_animating = 0;
+    cannon->is_animating = CANNON_IDLE;
     
     if (is_player_cannon) {
         cannon->canon_platform_texture = load_texture(renderer, "../images/player_canon_platform.png");

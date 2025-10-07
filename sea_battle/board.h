@@ -3,6 +3,18 @@
 
 #define GRID_SIZE 10
 #define MAX_SHIPS 10
+#define EDGE 21
+#define BETWEEN_GRIDS 228
+
+typedef struct GraphicsContext GraphicsContext;// Forward Declaration, подобно прототипам у функций
+
+typedef struct { 
+    char cell_size;      // ✅ копия из GraphicsContext
+    int field_size;      // ✅ копия из GraphicsContext  
+    int player_x; 
+    int computer_x; 
+    int offset_y;  
+} GameLandmarks; 
 
 typedef enum {
     CELL_EMPTY = 0,
@@ -12,18 +24,20 @@ typedef enum {
 } CellState;
 
 typedef struct {
-    int x, y;
-    int direction; 
-    int deck_count;
-    int hits;
-} Ship;
-
-typedef struct {
-    int cells[GRID_SIZE][GRID_SIZE]; 
+    char cells[GRID_SIZE][GRID_SIZE]; 
     Ship ships[MAX_SHIPS]; // 10 кораблей всего
-    int ship_count; // текущее количество расставленных
+    char ship_count; // текущее количество расставленных
 } GameBoard;
 
-void init_board(GameBoard* board);
+typedef struct {
+    char x, y; // это ориентация по клеткам, поэтому char
+    char direction; 
+    char deck_count;
+    char hits;
+} Ship;
 
+
+
+void init_board(GameBoard* board);
+GameLandmarks calculate_landmarks(const GraphicsContext* ctx);
 #endif

@@ -26,10 +26,12 @@ SDL_Renderer* create_game_renderer(SDL_Window* window)
     return SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
-GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* renderer) {
+GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* renderer) {//отправляет в мейн
     GraphicsContext ctx;
     ctx.window = window;
     ctx.renderer = renderer;
+    ctx.width_of_window = WIDTH;
+    ctx.height_of_window = HEIGHT;
     ctx.cell_size = CELL_SIZE; 
     ctx.field_size = GRID_SIZE * CELL_SIZE;
     ctx.ship_jup_1p = load_texture_from_file(renderer, "../images/ship_jup_1p.png");
@@ -66,26 +68,26 @@ void cleanup_graphics(GraphicsContext ctx) {
     }
 }
 
-void clear_screen(GraphicsContext ctx) {
-    SDL_SetRenderDrawColor(ctx.renderer, 0, 0, 0, 255); // Черный фон
-    SDL_RenderClear(ctx.renderer); // залить весь экран
+void clear_screen(const GraphicsContext* ctx) {
+    SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255); // Черный фон
+    SDL_RenderClear(ctx->renderer); // залить весь экран
 }
 
 void present_screen(GraphicsContext ctx) {
     SDL_RenderPresent(ctx.renderer);
 }
 
-void draw_board(GraphicsContext ctx, int base_x, int base_y, GameBoard board, int show_ships) { 
+void draw_board(const GraphicsContext* ctx, int base_x, int base_y, const GameBoard* board, char show_ships) { 
     
     draw_single_grid(ctx, base_x, base_y);
     
     if (show_ships) {
-        for (int i = 0; i < board.ship_count; i++) {
-            Ship ship = board.ships[i];
+        for (char i = 0; i < board->ship_count; i++) {
+            Ship ship = board->ships[i];
             SDL_Texture* texture;
     
         // Выбираем текстуру по количеству палуб
-            switch(ship.deck_count) {
+            switch(ship->deck_count) {
                 case 1: texture = ctx.ship_jup_1p; break;
                 case 2: texture = ctx.ship_jup_2p; break; 
                 case 3: texture = ctx.ship_jup_3p; break;
@@ -94,8 +96,7 @@ void draw_board(GraphicsContext ctx, int base_x, int base_y, GameBoard board, in
             }
     
             if (texture) {
-            draw_ship(ctx, base_x, base_y, ship.x, ship.y, 
-                 ship.direction, ship.deck_count, texture);
+            draw_ship(GraphicsContext ctx, int base_x, int base_y, const Ship* ship);
             }
         }
     }
@@ -105,7 +106,7 @@ void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y) {// offse
     SDL_SetRenderDrawColor(ctx.renderer, 255, 255, 255, 255); // Белый цвет сетки
         
     // Рисуем вертикальные линии
-    for (int x = 0; x <= GRID_SIZE; x++) {
+    for (char x = 0; x <= GRID_SIZE; x++) {
         SDL_RenderDrawLine(
             ctx.renderer,
             offset_x + x * ctx.cell_size, offset_y,           
@@ -114,7 +115,7 @@ void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y) {// offse
     }
     
     // Рисуем горизонтальные линии
-    for (int y = 0; y <= GRID_SIZE; y++) {
+    for (char y = 0; y <= GRID_SIZE; y++) {
         SDL_RenderDrawLine(
         ctx.renderer,
         offset_x, offset_y + y * ctx.cell_size,           
@@ -123,8 +124,8 @@ void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y) {// offse
     }
 }
 
-void draw_ship(GraphicsContext ctx, int base_x, int base_y, int grid_x, int grid_y, 
-               int direction, int deck_count, SDL_Texture* texture) {
+void draw_ship(GraphicsContext ctx, int base_x, int base_y, char grid_x, char grid_y, 
+               char direction, char deck_count, SDL_Texture* texture) {
     
     double angle = (direction == 1) ? 90.0 : 0.0;
     int ship_width, ship_height;
@@ -153,7 +154,7 @@ void draw_ship(GraphicsContext ctx, int base_x, int base_y, int grid_x, int grid
     SDL_RenderCopyEx(ctx.renderer, texture, NULL, &place_for_ship, angle, &pivot, SDL_FLIP_NONE);
 }
 
-void draw_cannon(GraphicsContext ctx, Cannon* cannon) {
+void draw_cannon(GraphicsContext ctx, const Cannon* cannon) {
     // Опора
     SDL_Rect base_rect = {
         .x = cannon->base_x,      

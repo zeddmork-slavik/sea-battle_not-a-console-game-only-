@@ -18,7 +18,7 @@ int main() {
         SDL_Quit(); 
         return 1;
     }
-    
+    \
     // 3. Создание рендерера - т.е. рисовальщика (перевод - средство визуализации)
     SDL_Renderer* renderer = create_game_renderer(window);
     if (!renderer) {
@@ -27,8 +27,8 @@ int main() {
     }
     
     GraphicsContext ctx = create_graphics_context(window, renderer);
-    
-    run_game(ctx);
+    GameLandmarks landmarks = calculate_landmarks(&ctx);
+    run_game(&ctx, &landmarks);
     
     // 5. Очистка
     cleanup_graphics(ctx);
