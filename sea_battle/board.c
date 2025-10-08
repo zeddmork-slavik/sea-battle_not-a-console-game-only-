@@ -1,4 +1,5 @@
 #include "board.h"
+#include "graphics.h"
 
 void init_board(GameBoard* board) {
     // Обнуляем все клетки поля

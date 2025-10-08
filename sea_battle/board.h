@@ -8,7 +8,7 @@
 
 typedef struct GraphicsContext GraphicsContext;// Forward Declaration, подобно прототипам у функций
 
-typedef struct { 
+typedef struct GameLandmarks{ 
     char cell_size;      // ✅ копия из GraphicsContext
     int field_size;      // ✅ копия из GraphicsContext  
     int player_x; 
@@ -24,17 +24,19 @@ typedef enum {
 } CellState;
 
 typedef struct {
-    char cells[GRID_SIZE][GRID_SIZE]; 
-    Ship ships[MAX_SHIPS]; // 10 кораблей всего
-    char ship_count; // текущее количество расставленных
-} GameBoard;
-
-typedef struct {
     char x, y; // это ориентация по клеткам, поэтому char
     char direction; 
     char deck_count;
     char hits;
 } Ship;
+
+typedef struct GameBoard{
+    char cells[GRID_SIZE][GRID_SIZE]; 
+    Ship ships[MAX_SHIPS]; // 10 кораблей всего
+    char ship_count; // текущее количество расставленных
+} GameBoard;
+
+
 
 
 

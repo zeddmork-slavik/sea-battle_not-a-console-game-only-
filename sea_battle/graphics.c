@@ -1,4 +1,6 @@
 #include "graphics.h"
+#include "board.h"
+#include "game.h"
 
 WindowConfig create_default_config(void) {
     return (WindowConfig) {WIDTH, HEIGHT};
@@ -38,6 +40,8 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.ship_jup_2p = load_texture_from_file(renderer, "../images/ship_jup_2p.png");
     ctx.ship_jup_3p = load_texture_from_file(renderer, "../images/ship_jup_3p.png");
     ctx.ship_jup_4p = load_texture_from_file(renderer, "../images/ship_jup_4p.png");
+    ctx.player_island_texture = load_texture_from_file(renderer, "../images/player_island.png");
+    ctx.computer_island_texture = load_texture_from_file(renderer, "../images/computer_island.png");
     return ctx;
 }
 
@@ -58,23 +62,25 @@ SDL_Texture* load_texture_from_file(SDL_Renderer* renderer, const char* filename
     // Шаг 6: Возвращаем готовую текстуру (или NULL если была ошибка)
     return texture;
 }
-// Реализации функций отрисовки (добавляем к вашему коду)
-void cleanup_graphics(GraphicsContext ctx) {
-    if (ctx.renderer) {
-        SDL_DestroyRenderer(ctx.renderer); // если напишем после SDL_DestroyWindow - то ничего не будет удалено - не найдут его при отсутсвии окна
+
+void cleanup_graphics(GraphicsContext* ctx) { // вызывается из main()
+    if (ctx->renderer) {
+        SDL_DestroyRenderer(ctx->renderer); // если напишем после SDL_DestroyWindow - то ничего не будет удалено - не найдут его при отсутсвии окна
+        ctx->renderer = NULL;
     }
-    if (ctx.window) {
-        SDL_DestroyWindow(ctx.window); // закрывает окно в ОС, освобождает всю связанную память, аннулирует указатель
+    if (ctx->window) {
+        SDL_DestroyWindow(ctx->window); // закрывает окно в ОС, освобождает всю связанную память, аннулирует указатель
+        ctx->window = NULL;
     }
 }
 
-void clear_screen(const GraphicsContext* ctx) {
+void clear_screen(const GraphicsContext* ctx) { // вызывается из run_game()
     SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255); // Черный фон
     SDL_RenderClear(ctx->renderer); // залить весь экран
 }
 
-void present_screen(GraphicsContext ctx) {
-    SDL_RenderPresent(ctx.renderer);
+void present_screen(const GraphicsContext* ctx) { // вызывается из run_game()
+    SDL_RenderPresent(ctx->renderer);
 }
 
 void draw_board(const GraphicsContext* ctx, int base_x, int base_y, const GameBoard* board, char show_ships) { 
@@ -83,48 +89,49 @@ void draw_board(const GraphicsContext* ctx, int base_x, int base_y, const GameBo
     
     if (show_ships) {
         for (char i = 0; i < board->ship_count; i++) {
-            Ship ship = board->ships[i];
+            Ship ship = board->ships[i]; // 5 против 64 за копию
             SDL_Texture* texture;
     
         // Выбираем текстуру по количеству палуб
-            switch(ship->deck_count) {
-                case 1: texture = ctx.ship_jup_1p; break;
-                case 2: texture = ctx.ship_jup_2p; break; 
-                case 3: texture = ctx.ship_jup_3p; break;
-                case 4: texture = ctx.ship_jup_4p; break;
+            switch(ship.deck_count) {
+                case 1: texture = ctx->ship_jup_1p; break;
+                case 2: texture = ctx->ship_jup_2p; break; 
+                case 3: texture = ctx->ship_jup_3p; break;
+                case 4: texture = ctx->ship_jup_4p; break;
                 default: texture = NULL; break;
             }
     
             if (texture) {
-            draw_ship(GraphicsContext ctx, int base_x, int base_y, const Ship* ship);
+            draw_ship(ctx, base_x, base_y, ship.x, ship.y, 
+                         ship.direction, ship.deck_count, texture);
             }
         }
     }
 }
 
-void draw_single_grid(GraphicsContext ctx, int offset_x, int offset_y) {// offset - сдвиг
-    SDL_SetRenderDrawColor(ctx.renderer, 255, 255, 255, 255); // Белый цвет сетки
+void draw_single_grid(const GraphicsContext* ctx, int offset_x, int offset_y) {// offset - сдвиг
+    SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 255); // Белый цвет сетки
         
     // Рисуем вертикальные линии
     for (char x = 0; x <= GRID_SIZE; x++) {
         SDL_RenderDrawLine(
-            ctx.renderer,
-            offset_x + x * ctx.cell_size, offset_y,           
-            offset_x + x * ctx.cell_size, offset_y + ctx.field_size 
+            ctx->renderer,
+            offset_x + x * ctx->cell_size, offset_y,           
+            offset_x + x * ctx->cell_size, offset_y + ctx->field_size 
         );
     }
     
     // Рисуем горизонтальные линии
     for (char y = 0; y <= GRID_SIZE; y++) {
         SDL_RenderDrawLine(
-        ctx.renderer,
-        offset_x, offset_y + y * ctx.cell_size,           
-        offset_x + ctx.field_size, offset_y + y * ctx.cell_size 
+        ctx->renderer,
+        offset_x, offset_y + y * ctx->cell_size,           
+        offset_x + ctx->field_size, offset_y + y * ctx->cell_size 
         );
     }
 }
 
-void draw_ship(GraphicsContext ctx, int base_x, int base_y, char grid_x, char grid_y, 
+void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, char grid_y, 
                char direction, char deck_count, SDL_Texture* texture) {
     
     double angle = (direction == 1) ? 90.0 : 0.0;
@@ -135,15 +142,15 @@ void draw_ship(GraphicsContext ctx, int base_x, int base_y, char grid_x, char gr
     
     if (direction == 0) { // горизонтальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + grid_x * ctx.cell_size - (ship_width - deck_count * ctx.cell_size) / 2,
-            .y = base_y + grid_y * ctx.cell_size - (ship_height - ctx.cell_size) / 2,
+            .x = base_x + grid_x * ctx->cell_size - (ship_width - deck_count * ctx->cell_size) / 2,
+            .y = base_y + grid_y * ctx->cell_size - (ship_height - ctx->cell_size) / 2,
             .w = ship_width,
             .h = ship_height
         };
     } else { // вертикальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + 69 + grid_x * ctx.cell_size - (ship_height - ctx.cell_size) / 2, //хз почему 69 надо - вымерил на глаз - а нейронку глючит
-            .y = base_y + grid_y * ctx.cell_size - (ship_width - deck_count * ctx.cell_size) / 2,
+            .x = base_x + X_CRUTCH_VERTICAL_SHIPS + grid_x * ctx->cell_size - (ship_height - ctx->cell_size) / 2, 
+            .y = base_y + grid_y * ctx->cell_size - (ship_width - deck_count * ctx->cell_size) / 2,
             .w = ship_width,  
             .h = ship_height    
         };
@@ -151,25 +158,36 @@ void draw_ship(GraphicsContext ctx, int base_x, int base_y, char grid_x, char gr
     
     // Ручная точка вращения - левый верхний угол
     SDL_Point pivot = {0, 0};
-    SDL_RenderCopyEx(ctx.renderer, texture, NULL, &place_for_ship, angle, &pivot, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(ctx->renderer, texture, NULL, &place_for_ship, angle, &pivot, SDL_FLIP_NONE);
 }
 
-void draw_cannon(GraphicsContext ctx, const Cannon* cannon) {
+void draw_island(const GraphicsContext* ctx, int base_x, int base_y){
+     SDL_Rect island_rect = {
+        .x = base_x,      
+        .y = base_y,
+        .w = WIDTH_PLAYER_ISLAND_TEXTURE,
+        .h = HEIGHT_PLAYER_ISLAND_TEXTURE
+    };
+
+    SDL_RenderCopy(ctx->renderer, ctx->player_island_texture, NULL, &island_rect);
+}
+
+void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon) {
     // Опора
     SDL_Rect base_rect = {
         .x = cannon->base_x,      
         .y = cannon->base_y,
-        .w = 176,
-        .h = 122
+        .w = WIDTH_CANON_TEXTURE,
+        .h = HEIGHT_CANON_TEXTURE
     };
-    SDL_RenderCopy(ctx.renderer, cannon->canon_platform_texture, NULL, &base_rect);
+    SDL_RenderCopy(ctx->renderer, cannon->canon_platform_texture, NULL, &base_rect);
     
     // Ствол
     SDL_Rect barrel_rect = {
         .x = cannon->base_x,
         .y = cannon->base_y,  
-        .w = 176,
-        .h = 122
+        .w = WIDTH_CANON_TEXTURE,
+        .h = HEIGHT_CANON_TEXTURE
     };
     
     SDL_Point pivot = {
@@ -178,8 +196,8 @@ void draw_cannon(GraphicsContext ctx, const Cannon* cannon) {
     };
     
     SDL_RenderCopyEx(
-        ctx.renderer, 
-        cannon->canon_barrel_texture, 
+        ctx->renderer, 
+        cannon->barrel_texture, 
         NULL, 
         &barrel_rect, 
         cannon->current_angle,    

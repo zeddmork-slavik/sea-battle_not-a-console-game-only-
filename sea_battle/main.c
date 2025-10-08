@@ -10,7 +10,7 @@ int main() {
         return 1; //SDL_GetError - функция для получения текстового человекочитаемого описания ошибки
     }
     
-    WindowConfig config = create_default_config();
+    WindowConfig config = create_default_config(); 
     SDL_Window* window = create_game_window(config);
     
     if (!window) {
@@ -26,12 +26,12 @@ int main() {
         return 1;
     }
     
-    GraphicsContext ctx = create_graphics_context(window, renderer);
+    GraphicsContext ctx = create_graphics_context(window, renderer); //когда вырасту точно тебя сделаю через указатель, и у нейронки даже спрашивать не буду
     GameLandmarks landmarks = calculate_landmarks(&ctx);
     run_game(&ctx, &landmarks);
     
     // 5. Очистка
-    cleanup_graphics(ctx);
+    cleanup_graphics(&ctx);
     SDL_Quit(); // освобождает только СИСТЕМНЫЕ ресурсы: инициализированные модули но не наши созданные объекты
     
     return 0;
