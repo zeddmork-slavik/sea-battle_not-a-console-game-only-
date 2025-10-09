@@ -7,8 +7,8 @@
 #define DONT_RUNNING 0
 #define SHOW_SHIPS 1 // for draw_board()
 #define DONT_SHOW_SHIPS 0
-#define IS_PLAYER_CANON 1 
-#define IS_COMPUTER_CANON 0       // next 4 for init_cannon() on run_game()
+#define IS_PLAYER 1 
+#define IS_COMPUTER 0       // next 4 for init_cannon() on run_game()
 #define OFFSET_X_FROM_BOARD 26 // под конкретную ширину - завязывать на переменные пока головняк. 26=20 корабли могут выступать из полей и 6 это половина остатков ширины after картинки
 #define OFFSET_Y_FROM_BOARD 70
 #define OFFSET_Y_FROM_COMPUTER_CANON 250
@@ -44,6 +44,7 @@ typedef struct {
 
 
 void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks);
-void init_cannon(Cannon* cannon, char is_player_cannon, int base_x, int base_y, SDL_Renderer* renderer);
+void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, SDL_Renderer* renderer);
+void aim_cannon_at(Cannon* cannon, int target_x, int target_y);
 
 #endif

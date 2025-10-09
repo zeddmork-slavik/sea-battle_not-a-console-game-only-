@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "graphics.h"
 #include "board.h"
 #include "game.h"
@@ -161,15 +162,15 @@ void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, 
     SDL_RenderCopyEx(ctx->renderer, texture, NULL, &place_for_ship, angle, &pivot, SDL_FLIP_NONE);
 }
 
-void draw_island(const GraphicsContext* ctx, int base_x, int base_y){
+void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_player){
      SDL_Rect island_rect = {
         .x = base_x,      
         .y = base_y,
-        .w = WIDTH_PLAYER_ISLAND_TEXTURE,
-        .h = HEIGHT_PLAYER_ISLAND_TEXTURE
+        .w = is_player? WIDTH_PLAYER_ISLAND_TEXTURE: WIDTH_COMPUTER_ISLAND_TEXTURE,
+        .h = is_player? HEIGHT_PLAYER_ISLAND_TEXTURE: HEIGHT_COMPUTER_ISLAND_TEXTURE,
     };
 
-    SDL_RenderCopy(ctx->renderer, ctx->player_island_texture, NULL, &island_rect);
+    SDL_RenderCopy(ctx->renderer, is_player? ctx->player_island_texture: ctx->computer_island_texture, NULL, &island_rect);
 }
 
 void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon) {
@@ -194,7 +195,7 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon) {
         .x = cannon->barrel_pivot_x,
         .y = cannon->barrel_pivot_y
     };
-    
+    printf("DRAW_CANNON -> pivot: (%d, %d)\n", pivot.x, pivot.y);
     SDL_RenderCopyEx(
         ctx->renderer, 
         cannon->barrel_texture, 

@@ -14,6 +14,8 @@
 #define HEIGHT_CANON_TEXTURE 122
 #define WIDTH_PLAYER_ISLAND_TEXTURE 167
 #define HEIGHT_PLAYER_ISLAND_TEXTURE 173
+#define WIDTH_COMPUTER_ISLAND_TEXTURE 197
+#define HEIGHT_COMPUTER_ISLAND_TEXTURE 154
 
 typedef struct GameBoard GameBoard;
 typedef struct Cannon Cannon;
@@ -50,6 +52,6 @@ void draw_board(const GraphicsContext* ctx, int base_x, int base_y, const GameBo
 void draw_single_grid(const GraphicsContext* ctx, int offset_x, int offset_y);
 void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, char grid_y, char direction, 
                char deck_count, SDL_Texture* texture);
-void draw_island(const GraphicsContext* ctx, int base_x, int base_y);
+void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_player);
 void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon);
 #endif
