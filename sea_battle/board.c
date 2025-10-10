@@ -27,7 +27,7 @@ GameLandmarks calculate_landmarks(const GraphicsContext* ctx){
     landmarks.field_size = ctx-> field_size;        
     landmarks.player_x = start_x + EDGE; 
     landmarks.computer_x = landmarks.player_x + ctx->field_size + BETWEEN_GRIDS;
-    landmarks.offset_y = ctx->height_of_window - ctx->field_size - EDGE; 
+    landmarks.offset_y = ctx->height_of_window - ctx->field_size - EDGE; // 179
     
     return landmarks;
 }

@@ -163,7 +163,7 @@ void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, 
 }
 
 void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_player){
-     SDL_Rect island_rect = {
+    SDL_Rect island_rect = {
         .x = base_x,      
         .y = base_y,
         .w = is_player? WIDTH_PLAYER_ISLAND_TEXTURE: WIDTH_COMPUTER_ISLAND_TEXTURE,
@@ -173,7 +173,7 @@ void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_pla
     SDL_RenderCopy(ctx->renderer, is_player? ctx->player_island_texture: ctx->computer_island_texture, NULL, &island_rect);
 }
 
-void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon) {
+void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player) {
     // Опора
     SDL_Rect base_rect = {
         .x = cannon->base_x,      
@@ -183,6 +183,8 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon) {
     };
     SDL_RenderCopy(ctx->renderer, cannon->canon_platform_texture, NULL, &base_rect);
     
+    if (is_player) {draw_fire_of_cannon(ctx, cannon, cannon->base_x + OFFSET_X_FROM_FIRE_OF_CANON, 
+    cannon->base_y + OFFSET_Y_FROM_FIRE_OF_CANON);}   
     // Ствол
     SDL_Rect barrel_rect = {
         .x = cannon->base_x,
@@ -195,12 +197,37 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon) {
         .x = cannon->barrel_pivot_x,
         .y = cannon->barrel_pivot_y
     };
-    printf("DRAW_CANNON -> pivot: (%d, %d)\n", pivot.x, pivot.y);
+
     SDL_RenderCopyEx(
         ctx->renderer, 
         cannon->barrel_texture, 
         NULL, 
         &barrel_rect, 
+        cannon->current_angle,    
+        &pivot, 
+        SDL_FLIP_NONE
+    );
+}
+
+void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int base_x, int base_y) {
+    
+    SDL_Rect fire = {
+        .x = base_x,
+        .y = base_y,  
+        .w = WIDTH_PLAYER_FIRE_CANON_TEXTURE,
+        .h = HEIGHT_PLAYER_FIRE_CANON_TEXTURE
+    };
+
+    SDL_Point pivot = {
+        .x = cannon->barrel_pivot_x,
+        .y = cannon->barrel_pivot_y
+    };
+    
+    SDL_RenderCopyEx(
+        ctx->renderer, 
+        cannon->canon_fire_texture, 
+        NULL, 
+        &fire, 
         cannon->current_angle,    
         &pivot, 
         SDL_FLIP_NONE

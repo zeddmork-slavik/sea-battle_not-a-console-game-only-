@@ -14,8 +14,14 @@
 #define HEIGHT_CANON_TEXTURE 122
 #define WIDTH_PLAYER_ISLAND_TEXTURE 167
 #define HEIGHT_PLAYER_ISLAND_TEXTURE 173
-#define WIDTH_COMPUTER_ISLAND_TEXTURE 197
-#define HEIGHT_COMPUTER_ISLAND_TEXTURE 154
+#define WIDTH_COMPUTER_ISLAND_TEXTURE 187
+#define HEIGHT_COMPUTER_ISLAND_TEXTURE 146
+#define X_CRUTCH_COMPUTER_ISLAND - 4
+#define Y_CRUTCH_COMPUTER_ISLAND 15
+#define WIDTH_PLAYER_FIRE_CANON_TEXTURE 165
+#define HEIGHT_PLAYER_FIRE_CANON_TEXTURE 95
+#define OFFSET_X_FROM_FIRE_OF_CANON 166 
+#define OFFSET_Y_FROM_FIRE_OF_CANON - 3
 
 typedef struct GameBoard GameBoard;
 typedef struct Cannon Cannon;
@@ -53,5 +59,6 @@ void draw_single_grid(const GraphicsContext* ctx, int offset_x, int offset_y);
 void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, char grid_y, char direction, 
                char deck_count, SDL_Texture* texture);
 void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_player);
-void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon);
+void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player);
+void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int base_x, int base_y);
 #endif

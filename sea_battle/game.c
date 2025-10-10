@@ -14,7 +14,7 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     game.computer_board = &computer_board_obj;
     init_board(game.player_board);    // обнуляем их
     init_board(game.computer_board);
-    
+
     game.player_board->ships[0] = (Ship){2, 5, 0, 1, 0}; // вынесу попозже
     game.player_board->ships[1] = (Ship){0, 0, 0, 2, 0};
     game.player_board->ships[2] = (Ship){4, 7, 1, 2, 0};
@@ -37,7 +37,9 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     init_cannon(&game.computer_cannon, IS_COMPUTER, landmarks->player_x + 
         ctx->field_size + OFFSET_X_FROM_BOARD, landmarks->offset_y + 
         OFFSET_Y_FROM_COMPUTER_CANON, ctx->renderer);
-
+    
+    double delta_time = 0.033; // 33ms = 1/30 секунды
+    
     SDL_Event event;
         while (game.running) {
         // Обработка событий
@@ -56,13 +58,12 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
                         mouse_y >= landmarks->offset_y && 
                         mouse_y <= landmarks->offset_y + ctx->field_size) {
             
-                        // Немедленный поворот ствола
                         aim_cannon_at(&game.player_cannon, mouse_x, mouse_y);
                     }
                 }
             }
-        
-        // Отрисовка 
+         
+            update_cannon_animation(&game.player_cannon, delta_time);
             clear_screen(ctx);  // это имя указателя
             draw_board(ctx, landmarks->player_x, landmarks->offset_y, 
                 game.player_board, SHOW_SHIPS); 
@@ -73,11 +74,11 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
                 landmarks->offset_y + OFFSET_Y_FROM_BOARD + 
                 ISLAND_BELOW_PLAYER_CANON, IS_PLAYER);
             draw_island(ctx, landmarks->player_x + ctx->field_size + 
-                OFFSET_X_FROM_BOARD, 
+                OFFSET_X_FROM_BOARD + X_CRUTCH_COMPUTER_ISLAND, 
                 landmarks->offset_y + OFFSET_Y_FROM_COMPUTER_CANON + 
-                ISLAND_BELOW_PLAYER_CANON, IS_COMPUTER);
-            draw_cannon(ctx, &game.player_cannon);
-            draw_cannon(ctx, &game.computer_cannon);
+                ISLAND_BELOW_PLAYER_CANON + Y_CRUTCH_COMPUTER_ISLAND, IS_COMPUTER);
+            draw_cannon(ctx, &game.player_cannon, IS_PLAYER);
+            draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER);
     
             present_screen(ctx);
         
@@ -93,16 +94,18 @@ void init_cannon(Cannon* cannon, char is_player, int base_x,
     cannon->current_angle = 0;
     cannon->target_angle = 0;
     cannon->is_animating = CANNON_IDLE;
+    cannon->rotation_speed = 45.0; // градусов в секунду (1.5° за кадр при 30 FPS)
     
     if (is_player) {
         cannon->canon_platform_texture = load_texture_from_file(renderer, "../images/player_canon_platform.png");
         cannon->barrel_texture = load_texture_from_file(renderer, "../images/player_canon_barrel.png");
+        cannon->canon_fire_texture = load_texture_from_file(renderer, "../images/player_canon_fire.png");
         cannon->barrel_pivot_x = PLAYER_CANNON_PIVOT_X;
         cannon->barrel_pivot_y = PLAYER_CANNON_PIVOT_Y;
     } else {
         cannon->canon_platform_texture = load_texture_from_file(renderer, "../images/computer_canon_platform.png");
         cannon->barrel_texture = load_texture_from_file(renderer, "../images/computer_canon_barrel.png");
-        cannon->barrel_pivot_x = COMPUTER_CANNON_PIVOT_X;
+        cannon->barrel_pivot_x = COMPUTER_CANNON_PIVOT_X; // пока без огонька
         cannon->barrel_pivot_y = COMPUTER_CANNON_PIVOT_Y;
     }
 }
@@ -115,16 +118,32 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y) {
     // Вектор от точки вращения к цели
     int dx = target_x - pivot_x;
     int dy = target_y - pivot_y;
-    printf("► Клик: (%d, %d)\n", target_x, target_y);
-    printf("► Точка вращения: (%d, %d)\n", pivot_x, pivot_y);
-    printf("► Вектор: dx=%d, dy=%d\n", dx, dy);
+
     // Вычисляем угол в градусах
     double angle_rad = atan2(dy, dx);
     double angle_deg = angle_rad * (180.0 / M_PI);
-    printf("► Угол: %.2f°\n", angle_deg);
-    printf("► БЫЛ угол: %.2f°\n", cannon->current_angle);
-    // Немедленно поворачиваем
-    cannon->current_angle = angle_deg;
-    printf("► СТАЛ угол: %.2f°\n", cannon->current_angle);
-    printf("---\n");
+
+    cannon->target_angle = angle_deg;
+    cannon->is_animating = CANNON_ANIMATING;
+    printf("Animation: %.2f° -> %.2f°\n", cannon->current_angle, cannon->target_angle);
+}
+
+void update_cannon_animation(Cannon* cannon, double delta_time) {
+    if (!cannon->is_animating) return;
+    
+    double max_rotation = cannon->rotation_speed * delta_time;
+    double angle_diff = cannon->target_angle - cannon->current_angle;
+    
+    // Нормализуем разницу углов (-180 до 180)
+    if (angle_diff > 180) angle_diff -= 360;  // чтобы 
+    if (angle_diff < -180) angle_diff += 360;
+    
+    // Плавное приближение
+    if (fabs(angle_diff) <= max_rotation) {
+        cannon->current_angle = cannon->target_angle;
+        cannon->is_animating = CANNON_IDLE;
+        printf("Animation ended!\n");
+    } else {
+        cannon->current_angle += (angle_diff > 0 ? max_rotation : -max_rotation);
+    }
 }
