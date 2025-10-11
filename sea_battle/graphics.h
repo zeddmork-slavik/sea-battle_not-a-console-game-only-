@@ -9,7 +9,7 @@
 #define HEIGHT 700
 #define CELL_SIZE 50
 #define GRID_SIZE 10
-#define X_CRUTCH_VERTICAL_SHIPS 69
+#define X_CRUTCH_VERTICAL_SHIPS 62
 #define WIDTH_CANON_TEXTURE 176  // пока для ствола и опоры одинаковые, дублировать не буду
 #define HEIGHT_CANON_TEXTURE 122
 #define WIDTH_PLAYER_ISLAND_TEXTURE 167
@@ -22,6 +22,8 @@
 #define HEIGHT_PLAYER_FIRE_CANON_TEXTURE 95
 #define OFFSET_X_FROM_FIRE_OF_CANON 166 
 #define OFFSET_Y_FROM_FIRE_OF_CANON - 3
+#define PIVOT_X_FROM_FIRE_OF_CANON -76
+#define PIVOT_Y_FROM_FIRE_OF_CANON 58
 
 typedef struct GameBoard GameBoard;
 typedef struct Cannon Cannon;

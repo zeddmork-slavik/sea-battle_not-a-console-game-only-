@@ -183,7 +183,7 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_playe
     };
     SDL_RenderCopy(ctx->renderer, cannon->canon_platform_texture, NULL, &base_rect);
     
-    if (is_player) {draw_fire_of_cannon(ctx, cannon, cannon->base_x + OFFSET_X_FROM_FIRE_OF_CANON, 
+    if (is_player && cannon->is_firing) {draw_fire_of_cannon(ctx, cannon, cannon->base_x + OFFSET_X_FROM_FIRE_OF_CANON, 
     cannon->base_y + OFFSET_Y_FROM_FIRE_OF_CANON);}   
     // Ствол
     SDL_Rect barrel_rect = {
@@ -211,6 +211,8 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_playe
 
 void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int base_x, int base_y) {
     
+    SDL_SetTextureAlphaMod(cannon->canon_fire_texture, cannon->current_alpha);
+
     SDL_Rect fire = {
         .x = base_x,
         .y = base_y,  
@@ -219,8 +221,8 @@ void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int b
     };
 
     SDL_Point pivot = {
-        .x = cannon->barrel_pivot_x,
-        .y = cannon->barrel_pivot_y
+        .x = PIVOT_X_FROM_FIRE_OF_CANON,
+        .y = PIVOT_Y_FROM_FIRE_OF_CANON
     };
     
     SDL_RenderCopyEx(

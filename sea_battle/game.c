@@ -8,6 +8,7 @@
 void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //зарефакторить её нужно будет скоро
     GameState game = {0};
     game.running = GAME_RUNNING;
+    game.current_turn = IS_PLAYER;
     GameBoard player_board_obj, computer_board_obj;  // статические объекты
     
     game.player_board = &player_board_obj;    // указатель на статический объект
@@ -42,7 +43,8 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     
     SDL_Event event;
         while (game.running) {
-        // Обработка событий
+            Uint32 current_time = SDL_GetTicks(); // текущее время каждого кадра
+            // Обработка событий
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_QUIT) {
                     game.running = DONT_RUNNING;
@@ -64,6 +66,22 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
             }
          
             update_cannon_animation(&game.player_cannon, delta_time);
+            if (!game.player_cannon.is_animating && 
+            game.player_cannon.animation_end_time != 0) {
+                if (current_time - game.player_cannon.animation_end_time >= 
+                game.player_cannon.fire_delay) {
+                    game.player_cannon.is_firing = 1;
+                    game.player_cannon.animation_end_time = 0;
+                }
+            }
+            if (game.player_cannon.is_firing) {
+                if (game.player_cannon.current_alpha > 0) {
+                    game.player_cannon.current_alpha -= 5;
+                } else {
+                    game.player_cannon.is_firing = 0;
+                    game.player_cannon.current_alpha = 255;  
+                }
+            }
             clear_screen(ctx);  // это имя указателя
             draw_board(ctx, landmarks->player_x, landmarks->offset_y, 
                 game.player_board, SHOW_SHIPS); 
@@ -77,8 +95,15 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
                 OFFSET_X_FROM_BOARD + X_CRUTCH_COMPUTER_ISLAND, 
                 landmarks->offset_y + OFFSET_Y_FROM_COMPUTER_CANON + 
                 ISLAND_BELOW_PLAYER_CANON + Y_CRUTCH_COMPUTER_ISLAND, IS_COMPUTER);
-            draw_cannon(ctx, &game.player_cannon, IS_PLAYER);
-            draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER);
+            if (game.current_turn){
+                draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER);
+                draw_cannon(ctx, &game.player_cannon, IS_PLAYER);
+            }
+            else {
+                draw_cannon(ctx, &game.player_cannon, IS_PLAYER);
+                draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER);
+            }   
+            
     
             present_screen(ctx);
         
@@ -93,7 +118,11 @@ void init_cannon(Cannon* cannon, char is_player, int base_x,
     cannon->base_y = base_y;
     cannon->current_angle = 0;
     cannon->target_angle = 0;
-    cannon->is_animating = CANNON_IDLE;
+    cannon->is_animating = IDLE;
+    cannon->is_firing = IDLE;
+    cannon->animation_end_time = 0;
+    cannon->fire_delay = DELAY_FIRE_CANON; 
+    cannon->current_alpha = STARTING_TRANSPARENCY;
     cannon->rotation_speed = 45.0; // градусов в секунду (1.5° за кадр при 30 FPS)
     
     if (is_player) {
@@ -124,8 +153,7 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y) {
     double angle_deg = angle_rad * (180.0 / M_PI);
 
     cannon->target_angle = angle_deg;
-    cannon->is_animating = CANNON_ANIMATING;
-    printf("Animation: %.2f° -> %.2f°\n", cannon->current_angle, cannon->target_angle);
+    cannon->is_animating = ANIMATING;
 }
 
 void update_cannon_animation(Cannon* cannon, double delta_time) {
@@ -141,9 +169,12 @@ void update_cannon_animation(Cannon* cannon, double delta_time) {
     // Плавное приближение
     if (fabs(angle_diff) <= max_rotation) {
         cannon->current_angle = cannon->target_angle;
-        cannon->is_animating = CANNON_IDLE;
-        printf("Animation ended!\n");
-    } else {
+        cannon->is_animating = IDLE;
+        cannon->animation_end_time = SDL_GetTicks(); // ← запоминаем КОГДА закончили поворот
+    // is_firing пока НЕ включаем!
+
+    } 
+    else {
         cannon->current_angle += (angle_diff > 0 ? max_rotation : -max_rotation);
     }
 }

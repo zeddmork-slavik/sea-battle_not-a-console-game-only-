@@ -1,8 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-#define CANNON_IDLE 0 // это флаги для Canon.is_animating
-#define CANNON_ANIMATING 1
+#define IDLE 0 // это флаги для Canon
+#define ANIMATING 1
 #define GAME_RUNNING 1
 #define DONT_RUNNING 0
 #define SHOW_SHIPS 1 // for draw_board()
@@ -17,6 +17,8 @@
 #define PLAYER_CANNON_PIVOT_Y 55
 #define COMPUTER_CANNON_PIVOT_X 105
 #define COMPUTER_CANNON_PIVOT_Y 43
+#define DELAY_FIRE_CANON 500 // 0.5 секунды
+#define STARTING_TRANSPARENCY 255 // совсем не прозрачная
 
 
 typedef struct GameBoard GameBoard;
@@ -31,7 +33,11 @@ typedef struct Cannon{ // без имени компилятор ананиму�
     char barrel_pivot_x, barrel_pivot_y; // точка вращения ствола (90,55)
     double current_angle;         // текущий угол ствола
     double target_angle;          // целевой угол
-    char is_animating;             // флаг анимации
+    char is_animating; // показываем анимацию
+    char is_firing;   
+    Uint32 animation_end_time; // когда ЗАКОНЧИЛАСЬ анимация поворота
+    Uint32 fire_delay;        // задержка перед показом огня (500ms)       
+    unsigned char current_alpha;       // 🆕 текущая прозрачность (255 = непрозрачный)
     double rotation_speed;
 } Cannon;
 
@@ -41,6 +47,7 @@ typedef struct {
     GameBoard* computer_board;
     Cannon player_cannon;
     Cannon computer_cannon;
+    char current_turn;  // 🆕 PLAYER_TURN или COMPUTER_TURN
     // позже добавим состояние игры (расстановка, ход игрока и т.д.)
 } GameState;
 
