@@ -61,6 +61,7 @@ void draw_single_grid(const GraphicsContext* ctx, int offset_x, int offset_y);
 void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, char grid_y, char direction, 
                char deck_count, SDL_Texture* texture);
 void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_player);
-void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player);
+void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player, char is_ball_active);
 void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int base_x, int base_y);
+void draw_cannonball(const GraphicsContext* ctx, const Cannonball* core);
 #endif

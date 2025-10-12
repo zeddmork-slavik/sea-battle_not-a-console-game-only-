@@ -19,6 +19,8 @@
 #define COMPUTER_CANNON_PIVOT_Y 43
 #define DELAY_FIRE_CANON 500 // 0.5 секунды
 #define STARTING_TRANSPARENCY 255 // совсем не прозрачная
+#define SPEED_TRANSPARENCY_BY_FRAME 5
+#define BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME 0.033
 
 
 typedef struct GameBoard GameBoard;
@@ -42,11 +44,25 @@ typedef struct Cannon{ // без имени компилятор ананиму�
 } Cannon;
 
 typedef struct {
+    char is_active;           // летит ли ядро
+    SDL_Texture* texture;
+    int start_x, start_y;     // точка вылета (срез ствола)
+    int target_x, target_y;   // центр целевой клетки
+    int current_x, current_y; // текущая позиция
+    float progress;           // 0.0 → 1.0 (пройденный путь)
+    Uint32 start_time;        // время запуска
+    Uint32 flight_duration;   // ???? зачем ? длительность полёта (ms)
+    double rotation_angle;    // текущий угол при вращении
+    double rotation_speed;    // скорость вращения
+} Cannonball;
+
+typedef struct {
     char running;
     GameBoard* player_board;
     GameBoard* computer_board;
     Cannon player_cannon;
     Cannon computer_cannon;
+    Cannonball cannonball;
     char current_turn;  // 🆕 PLAYER_TURN или COMPUTER_TURN
     // позже добавим состояние игры (расстановка, ход игрока и т.д.)
 } GameState;
@@ -54,8 +70,11 @@ typedef struct {
 
 
 void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks);
-void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, SDL_Renderer* renderer);
-void aim_cannon_at(Cannon* cannon, int target_x, int target_y);
+void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, 
+    SDL_Renderer* renderer);
+void aim_cannon_at(Cannon* cannon, int target_x, int target_y, 
+    const GraphicsContext* ctx, const GameLandmarks* landmarks,
+    Cannonball* cannonball);
 void update_cannon_animation(Cannon* cannon, double delta_time);
-
+void fire_cannonball(Cannonball* ball, const Cannon* cannon);
 #endif

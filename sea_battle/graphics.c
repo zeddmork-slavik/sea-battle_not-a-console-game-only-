@@ -173,7 +173,7 @@ void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_pla
     SDL_RenderCopy(ctx->renderer, is_player? ctx->player_island_texture: ctx->computer_island_texture, NULL, &island_rect);
 }
 
-void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player) {
+void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player, char is_ball_active) {
     // Опора
     SDL_Rect base_rect = {
         .x = cannon->base_x,      
@@ -183,6 +183,10 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_playe
     };
     SDL_RenderCopy(ctx->renderer, cannon->canon_platform_texture, NULL, &base_rect);
     
+    if (is_ball_active) {
+        draw_cannonball(ctx, &game.cannonball);
+    }
+
     if (is_player && cannon->is_firing) {draw_fire_of_cannon(ctx, cannon, cannon->base_x + OFFSET_X_FROM_FIRE_OF_CANON, 
     cannon->base_y + OFFSET_Y_FROM_FIRE_OF_CANON);}   
     // Ствол
@@ -232,6 +236,29 @@ void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int b
         &fire, 
         cannon->current_angle,    
         &pivot, 
+        SDL_FLIP_NONE
+    );
+}
+
+void draw_cannonball(const GraphicsContext* ctx, const Cannonball* core) {
+    if (!core->is_active) return;
+    
+    SDL_Rect core_rect = {
+        .x = core->current_x - 5, // центрируем (10/2)
+        .y = core->current_y - 5, // центрируем (11/2) 
+        .w = 10,
+        .h = 11
+    };
+    
+    SDL_Point pivot = {5, 5}; // центр вращения
+    
+    SDL_RenderCopyEx(
+        ctx->renderer,
+        core->texture, 
+        NULL,
+        &ball_rect,
+        core->rotation_angle,
+        &pivot,
         SDL_FLIP_NONE
     );
 }

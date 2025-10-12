@@ -6,7 +6,7 @@
 #include "board.h"
 
 void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //зарефакторить её нужно будет скоро
-    GameState game = {0};
+    GameState game = {0};  // не трогать: убираю в инициализации поля в которых нужны нули
     game.running = GAME_RUNNING;
     game.current_turn = IS_PLAYER;
     GameBoard player_board_obj, computer_board_obj;  // статические объекты
@@ -39,7 +39,9 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
         ctx->field_size + OFFSET_X_FROM_BOARD, landmarks->offset_y + 
         OFFSET_Y_FROM_COMPUTER_CANON, ctx->renderer);
     
-    double delta_time = 0.033; // 33ms = 1/30 секунды
+    double delta_time = BARREL_ROTATION_SPEED_SECOND_PER_FRAME; 
+    game.cannonball.texture = load_texture_from_file(ctx->renderer, "../images/cannonball.png");
+    game.cannonball.rotation_speed = 720.0;    // 720°/секунду = 2 оборота в секунду
     
     SDL_Event event;
         while (game.running) {
@@ -60,26 +62,32 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
                         mouse_y >= landmarks->offset_y && 
                         mouse_y <= landmarks->offset_y + ctx->field_size) {
             
-                        aim_cannon_at(&game.player_cannon, mouse_x, mouse_y);
+                        aim_cannon_at(&game.player_cannon, mouse_x, mouse_y, ctx,
+                            landmarks, &game.cannonball);
                     }
                 }
             }
          
             update_cannon_animation(&game.player_cannon, delta_time);
+        //    update_cannonball(&game.cannonball, current_time);
             if (!game.player_cannon.is_animating && 
             game.player_cannon.animation_end_time != 0) {
                 if (current_time - game.player_cannon.animation_end_time >= 
                 game.player_cannon.fire_delay) {
                     game.player_cannon.is_firing = 1;
                     game.player_cannon.animation_end_time = 0;
+                    game.cannonball.is_active = 1;
+                    game.cannonball.start_time = current_time; //? зачем вы?
+                    fire_cannonball(&game.cannonball, &game.player_cannon, 
+                        int target_x, int target_y)
                 }
             }
             if (game.player_cannon.is_firing) {
                 if (game.player_cannon.current_alpha > 0) {
-                    game.player_cannon.current_alpha -= 5;
+                    game.player_cannon.current_alpha -= SPEED_TRANSPARENCY_BY_FRAME;
                 } else {
                     game.player_cannon.is_firing = 0;
-                    game.player_cannon.current_alpha = 255;  
+                    game.player_cannon.current_alpha = STARTING_TRANSPARENCY;  
                 }
             }
             clear_screen(ctx);  // это имя указателя
@@ -96,7 +104,7 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
                 landmarks->offset_y + OFFSET_Y_FROM_COMPUTER_CANON + 
                 ISLAND_BELOW_PLAYER_CANON + Y_CRUTCH_COMPUTER_ISLAND, IS_COMPUTER);
             if (game.current_turn){
-                draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER);
+                draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER, game.cannonball.is_active);
                 draw_cannon(ctx, &game.player_cannon, IS_PLAYER);
             }
             else {
@@ -116,11 +124,6 @@ void init_cannon(Cannon* cannon, char is_player, int base_x,
     int base_y, SDL_Renderer* renderer) {
     cannon->base_x = base_x;
     cannon->base_y = base_y;
-    cannon->current_angle = 0;
-    cannon->target_angle = 0;
-    cannon->is_animating = IDLE;
-    cannon->is_firing = IDLE;
-    cannon->animation_end_time = 0;
     cannon->fire_delay = DELAY_FIRE_CANON; 
     cannon->current_alpha = STARTING_TRANSPARENCY;
     cannon->rotation_speed = 45.0; // градусов в секунду (1.5° за кадр при 30 FPS)
@@ -139,7 +142,8 @@ void init_cannon(Cannon* cannon, char is_player, int base_x,
     }
 }
 
-void aim_cannon_at(Cannon* cannon, int target_x, int target_y) {
+void aim_cannon_at(Cannon* cannon, int target_x, int target_y, const GraphicsContext* ctx, const GameLandmarks* landmarks,
+                  Cannonball* cannonball) {
     // Координаты точки вращения ствола
     int pivot_x = cannon->base_x + cannon->barrel_pivot_x;
     int pivot_y = cannon->base_y + cannon->barrel_pivot_y;
@@ -149,11 +153,19 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y) {
     int dy = target_y - pivot_y;
 
     // Вычисляем угол в градусах
-    double angle_rad = atan2(dy, dx);
+    double angle_rad = atan2(dy, dx);  // повторяемся, такое же считаем в отрисовке но типа там графика а здесь логика, не создавать же отдельные поля в текстурах только ради этого
     double angle_deg = angle_rad * (180.0 / M_PI);
 
     cannon->target_angle = angle_deg;
     cannon->is_animating = ANIMATING;
+
+
+    int cell_x = (mouse_x - landmarks->computer_x) / ctx->cell_size;
+    int cell_y = (mouse_y - landmarks->offset_y) / ctx->cell_size;
+    
+
+    cannonball->target_x = landmarks->computer_x + cell_x * ctx->cell_size + ctx->cell_size/2;
+    cannonball->target_y = landmarks->offset_y + cell_y * ctx->cell_size + ctx->cell_size/2;
 }
 
 void update_cannon_animation(Cannon* cannon, double delta_time) {
@@ -177,4 +189,27 @@ void update_cannon_animation(Cannon* cannon, double delta_time) {
     else {
         cannon->current_angle += (angle_diff > 0 ? max_rotation : -max_rotation);
     }
+}
+
+
+void fire_cannonball(Cannonball* ball, const Cannon* cannon) {
+    
+    // 🎯 Вычисляем точку вылета с учётом угла ствола
+    double angle_rad = cannon->current_angle * (M_PI / 180.0);
+    int barrel_length = 100; // эмпирическая длина ствола
+    
+    ball->start_x = cannon->base_x + cannon->barrel_pivot_x + 
+                   (int)(barrel_length * cos(angle_rad));
+    ball->start_y = cannon->base_y + cannon->barrel_pivot_y + 
+                   (int)(barrel_length * sin(angle_rad));
+    
+    // Текущая позиция = точке вылета
+    ball->current_x = ball->start_x;
+    ball->current_y = ball->start_y;
+    
+    // 🎯 Длительность полёта = расстояние / скорость
+    int dx = ball->target_x - ball->start_x;
+    int dy = ball->target_y - ball->start_y;
+    float distance = sqrtf(dx*dx + dy*dy);
+    ball->flight_duration = (Uint32)(distance / 400.0f * 1000.0f); // 400 px/сек
 }
