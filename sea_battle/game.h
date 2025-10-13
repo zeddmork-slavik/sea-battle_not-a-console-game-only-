@@ -21,7 +21,9 @@
 #define STARTING_TRANSPARENCY 255 // совсем не прозрачная
 #define SPEED_TRANSPARENCY_BY_FRAME 5
 #define BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME 0.033
-
+#define ANGLE_BETWEEN_DIRECTION_PLAYER_BARREL_AND_ITS_TEXTURE -7.0
+#define PLAYER_BARREL_LENGTH 82
+#define SPEED_CONNONBALL 220.0f
 
 typedef struct GameBoard GameBoard;
 typedef struct GraphicsContext GraphicsContext;
@@ -43,17 +45,18 @@ typedef struct Cannon{ // без имени компилятор ананиму�
     double rotation_speed;
 } Cannon;
 
-typedef struct {
+typedef struct Cannonball{
     char is_active;           // летит ли ядро
     SDL_Texture* texture;
     int start_x, start_y;     // точка вылета (срез ствола)
     int target_x, target_y;   // центр целевой клетки
     int current_x, current_y; // текущая позиция
-    float progress;           // 0.0 → 1.0 (пройденный путь)
+    float progress;           // 0.0 → 1.0 (пройденный путь) ради параболического полёта - первую половину подымаемся вторую опускаемся
     Uint32 start_time;        // время запуска
     Uint32 flight_duration;   // ???? зачем ? длительность полёта (ms)
     double rotation_angle;    // текущий угол при вращении
     double rotation_speed;    // скорость вращения
+    float parabola_height;  // 🆕 высота параболы
 } Cannonball;
 
 typedef struct {
@@ -76,5 +79,6 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y,
     const GraphicsContext* ctx, const GameLandmarks* landmarks,
     Cannonball* cannonball);
 void update_cannon_animation(Cannon* cannon, double delta_time);
-void fire_cannonball(Cannonball* ball, const Cannon* cannon);
+void fire_cannonball(Cannonball* ball, const Cannon* cannon, Uint32 current_time);
+void update_cannonball(Cannonball* ball, Uint32 current_time);
 #endif

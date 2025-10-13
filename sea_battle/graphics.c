@@ -143,15 +143,15 @@ void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, 
     
     if (direction == 0) { // горизонтальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + grid_x * ctx->cell_size - (ship_width - deck_count * ctx->cell_size) / 2,
-            .y = base_y + grid_y * ctx->cell_size - (ship_height - ctx->cell_size) / 2,
+            .x = base_x + grid_x * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) >> 1),
+            .y = base_y + grid_y * ctx->cell_size - ((ship_height - ctx->cell_size) >> 1),
             .w = ship_width,
             .h = ship_height
         };
     } else { // вертикальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + X_CRUTCH_VERTICAL_SHIPS + grid_x * ctx->cell_size - (ship_height - ctx->cell_size) / 2, 
-            .y = base_y + grid_y * ctx->cell_size - (ship_width - deck_count * ctx->cell_size) / 2,
+            .x = base_x + X_CRUTCH_VERTICAL_SHIPS + grid_x * ctx->cell_size - ((ship_height - ctx->cell_size) >> 1), 
+            .y = base_y + grid_y * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) >> 1),
             .w = ship_width,  
             .h = ship_height    
         };
@@ -173,7 +173,7 @@ void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_pla
     SDL_RenderCopy(ctx->renderer, is_player? ctx->player_island_texture: ctx->computer_island_texture, NULL, &island_rect);
 }
 
-void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player, char is_ball_active) {
+void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player, const Cannonball* cannonball) {
     // Опора
     SDL_Rect base_rect = {
         .x = cannon->base_x,      
@@ -183,8 +183,8 @@ void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_playe
     };
     SDL_RenderCopy(ctx->renderer, cannon->canon_platform_texture, NULL, &base_rect);
     
-    if (is_ball_active) {
-        draw_cannonball(ctx, &game.cannonball);
+    if (cannonball->is_active) {
+        draw_cannonball(ctx, cannonball);
     }
 
     if (is_player && cannon->is_firing) {draw_fire_of_cannon(ctx, cannon, cannon->base_x + OFFSET_X_FROM_FIRE_OF_CANON, 
@@ -256,7 +256,7 @@ void draw_cannonball(const GraphicsContext* ctx, const Cannonball* core) {
         ctx->renderer,
         core->texture, 
         NULL,
-        &ball_rect,
+        &core_rect,
         core->rotation_angle,
         &pivot,
         SDL_FLIP_NONE
