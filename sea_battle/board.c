@@ -46,20 +46,65 @@ void auto_arrange_ships(GameBoard* board){
         char x = (char) rand() % GRID_SIZE;
         char y = (char) rand() % GRID_SIZE;
         
-        if(can_place_ship(x, y, 4)){board->ship_count++; 
-                place_ship(пока нету ); // внесение изменений в CellState - не факт что понадобится - сможем это делать и в предудущей
-        }
-        
+        if(can_place_first_deck(board, x, y, 4)){
+            place_for_others_decks(board, x, y, 4); 
+            // внесение изменений в CellState and board->ship_count++; 
+        }   
     }
-    
-    
-
 }   
 
- char can_place_ship(GameBoard* board, char x, char y, char deck_count){
-    char flag = 1, count_succes_decks = 0;
-    if(board->cells[x][y] == CELL_EMPTY)
-    
+ char can_place_first_deck(const GameBoard* board, char x, char y, char deck_count){
+    char flag = 1;
+    if(board->cells[x][y] != CELL_EMPTY) {break;} 
+    if (x > 0 && x < GRID_SIZE - 1 && y == 0) { // top row except corners
+        if (board->cells[x + 1][0] == CELL_EMPTY && board->cells[x - 1][0] == CELL_EMPTY 
+            && board->cells[x][1] == CELL_EMPTY && board->cells[x - 1][1] == CELL_EMPTY 
+            && board->cells[x + 1][1] == CELL_EMPTY) {flag == 0;}
+    }
+        
+    if (x == 0 && y > 0 && y < GRID_SIZE - 1) { // left col except corners
+        if (board->cells[0][y -1] == CELL_EMPTY && board->cells[0][y + 1] == CELL_EMPTY 
+            && board->cells[1][y - 1] == CELL_EMPTY && board->cells[1][y] == CELL_EMPTY 
+            && board->cells[1][y + 1] == CELL_EMPTY) {flag == 0;}
+    }
     
     return flag;
+}
+
+void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count){
+    char valid_mask = 0;
+
+    // 2. Включаем выключатели для валидных направлений
+    if (can_go_left)  valid_mask |= (1 << LEFT);   // включили LEFT
+    if (can_go_right) valid_mask |= (1 << RIGHT);  // включили RIGHT
+    if (can_go_up)    valid_mask |= (1 << UP);     // включили UP
+    if (can_go_down)  valid_mask |= (1 << DOWN);   // включили DOWN
+
+    // 3. Проверяем конкретное направление
+    if (valid_mask & (1 << LEFT)) {
+    printf("Можно идти влево!\n");
+    }
+
+    // 4. Считаем сколько направлений доступно
+    int count = 0;
+    for (int i = 0; i < 4; i++) {
+        if (valid_mask & (1 << i)) {
+            count++;  // считаем включённые выключатели
+        }
+}
+
+// 5. Выбираем случайное направление
+int random_index = rand() % count;
+int current = 0;
+for (int i = 0; i < 4; i++) {
+    if (valid_mask & (1 << i)) {
+        if (current == random_index) {
+            int direction = i;  // нашли направление!
+            break;
+        }
+        current++;
+    }
+}
+
+
 }
