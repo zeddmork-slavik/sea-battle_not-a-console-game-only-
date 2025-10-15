@@ -1,8 +1,8 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#define GRID_SIZE 10
-#define MAX_SHIPS 4 // пока 4 четырёхпалубных
+#define GRID_SIZE 10  // нейронка пообещала что в интересах cells приведёт сам к (char)
+#define MAX_SHIPS 20 // пока 4 четырёхпалубных
 #define EDGE 21
 #define BETWEEN_GRIDS 228
 #define LEFT  0 // эти 4 для проверки валидности направлений дальнейшего рассположения клеток у корабля
@@ -46,4 +46,8 @@ typedef struct GameBoard{
 
 void init_board(GameBoard* board);
 GameLandmarks calculate_landmarks(const GraphicsContext* ctx);
+void auto_arrange_ships(GameBoard* board);
+char check_place_for_first_deck(const GameBoard* board, char x, char y);
+void check_corners_for_first_deck(const GameBoard* board, char x, char y, char* flag);
+//void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count);
 #endif
