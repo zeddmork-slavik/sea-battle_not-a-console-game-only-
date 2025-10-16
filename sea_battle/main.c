@@ -1,5 +1,6 @@
 #define SDL_MAIN_HANDLED // иначе при компиляции ошибка "undefined reference to `WinMain'"
 #include <SDL2/SDL.h>
+#include <time.h>
 #include "graphics.h"
 #include "board.h"
 #include "game.h"
@@ -28,6 +29,7 @@ int main() {
     
     GraphicsContext ctx = create_graphics_context(window, renderer); //когда вырасту точно тебя сделаю через указатель, и у нейронки даже спрашивать не буду
     GameLandmarks landmarks = calculate_landmarks(&ctx);
+    srand((unsigned int)time(NULL));
     run_game(&ctx, &landmarks);
     
     // 5. Очистка

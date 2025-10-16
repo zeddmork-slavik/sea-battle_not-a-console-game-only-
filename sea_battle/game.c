@@ -22,12 +22,12 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     init_cannon(&game.computer_cannon, IS_COMPUTER, landmarks->player_x + 
         ctx->field_size + OFFSET_X_FROM_BOARD, landmarks->offset_y + 
         OFFSET_Y_FROM_COMPUTER_CANON, ctx->renderer);
-    
-    double delta_time = BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME; 
+     
     game.cannonball.texture = load_texture_from_file(ctx->renderer, "../images/cannonball.png");
     game.cannonball.rotation_speed = 720.0;    // 720°/секунду = 2 оборота в секунду
     
-    SDL_Event event;
+    event_processing(&game, ctx, landmarks);
+    /*SDL_Event event;
         while (game.running) {
             Uint32 current_time = SDL_GetTicks(); // текущее время каждого кадра
             // Обработка событий
@@ -52,51 +52,86 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
                 }
             }
          
-            update_cannon_animation(&game.player_cannon, delta_time);
-            update_cannonball(&game.cannonball, current_time);
-            if (!game.player_cannon.is_animating && 
-            game.player_cannon.animation_end_time != 0) {
-                if (current_time - game.player_cannon.animation_end_time >= 
-                game.player_cannon.fire_delay) {
-                    game.player_cannon.is_firing = 1;
-                    game.player_cannon.animation_end_time = 0;
-                    fire_cannonball(&game.cannonball, &game.player_cannon, current_time);
-                }
-            }
-            if (game.player_cannon.is_firing) {
-                if (game.player_cannon.current_alpha > 0) {
-                    game.player_cannon.current_alpha -= SPEED_TRANSPARENCY_BY_FRAME;
-                } else {
-                    game.player_cannon.is_firing = 0;
-                    game.player_cannon.current_alpha = STARTING_TRANSPARENCY;  
-                }
-            }
-            clear_screen(ctx);  // это имя указателя
-            draw_board(ctx, landmarks->player_x, landmarks->offset_y, 
-                game.player_board, SHOW_SHIPS); 
-            draw_board(ctx, landmarks->computer_x, landmarks->offset_y, 
-                game.computer_board, SHOW_SHIPS);
-            draw_island(ctx, landmarks->player_x + ctx->field_size + 
-                OFFSET_X_FROM_BOARD, 
-                landmarks->offset_y + OFFSET_Y_FROM_BOARD + 
-                ISLAND_BELOW_PLAYER_CANON, IS_PLAYER);
-            draw_island(ctx, landmarks->player_x + ctx->field_size + 
-                OFFSET_X_FROM_BOARD + X_CRUTCH_COMPUTER_ISLAND, 
-                landmarks->offset_y + OFFSET_Y_FROM_COMPUTER_CANON + 
-                ISLAND_BELOW_PLAYER_CANON + Y_CRUTCH_COMPUTER_ISLAND, IS_COMPUTER);
-            if (game.current_turn){
-                draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER, &game.cannonball);
-                draw_cannon(ctx, &game.player_cannon, IS_PLAYER, &game.cannonball);
-            }
-            else {
-                draw_cannon(ctx, &game.player_cannon, IS_PLAYER, &game.cannonball);
-                draw_cannon(ctx, &game.computer_cannon, IS_COMPUTER, &game.cannonball);
-            }   
-            
-            present_screen(ctx);
+            compose_frame(&game, delta_time, current_time, ctx, landmarks);
         
             SDL_Delay(33); // ~30 FPS для пошаговой игры
+    }*/
+}
+
+void event_processing(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks){
+    
+    double delta_time = BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME;
+    SDL_Event event;
+        while (game->running) {
+            Uint32 current_time = SDL_GetTicks(); // текущее время каждого кадра
+            // Обработка событий
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    game->running = DONT_RUNNING;
+                }
+                else if (event.type == SDL_MOUSEBUTTONDOWN && 
+                    event.button.button == SDL_BUTTON_LEFT) {
+                    int mouse_x = event.button.x;
+                    int mouse_y = event.button.y;
+        
+                    // Проверяем клик по полю компьютера
+                    if (mouse_x >= landmarks->computer_x && 
+                        mouse_x <= landmarks->computer_x + ctx->field_size &&
+                        mouse_y >= landmarks->offset_y && 
+                        mouse_y <= landmarks->offset_y + ctx->field_size) {
+                                    aim_cannon_at(&game->player_cannon, mouse_x, mouse_y, ctx,
+                                        landmarks, &game->cannonball);
+                    }
+                }
+            }
+         
+            compose_frame(game, delta_time, current_time, ctx, landmarks);
+        
+            SDL_Delay(33); // ~30 FPS для пошаговой игры
+        }
+}
+
+void compose_frame(GameState* game, double delta_time, Uint32 current_time, const GraphicsContext* ctx, const GameLandmarks* landmarks){
+    update_cannon_animation(&game->player_cannon, delta_time);
+    update_cannonball(&game->cannonball, current_time);
+    if (!game->player_cannon.is_animating && 
+        game->player_cannon.animation_end_time != 0) {
+        if (current_time - game->player_cannon.animation_end_time >= 
+            game->player_cannon.fire_delay) {
+            game->player_cannon.is_firing = 1;
+            game->player_cannon.animation_end_time = 0;
+            fire_cannonball(&game->cannonball, &game->player_cannon, current_time);
+        }
     }
+    if (game->player_cannon.is_firing) {
+        if (game->player_cannon.current_alpha > 0) {
+            game->player_cannon.current_alpha -= SPEED_TRANSPARENCY_BY_FRAME;
+        } else {
+            game->player_cannon.is_firing = 0;
+            game->player_cannon.current_alpha = STARTING_TRANSPARENCY;  
+        }
+    }
+    clear_screen(ctx);  // это имя указателя
+    draw_board(ctx, landmarks->player_x, landmarks->offset_y, 
+            game->player_board, SHOW_SHIPS); 
+    draw_board(ctx, landmarks->computer_x, landmarks->offset_y, 
+            game->computer_board, SHOW_SHIPS);
+    draw_island(ctx, landmarks->player_x + ctx->field_size + 
+            OFFSET_X_FROM_BOARD, landmarks->offset_y + OFFSET_Y_FROM_BOARD + 
+            ISLAND_BELOW_PLAYER_CANON, IS_PLAYER);
+    draw_island(ctx, landmarks->player_x + ctx->field_size + 
+            OFFSET_X_FROM_BOARD + X_CRUTCH_COMPUTER_ISLAND, 
+            landmarks->offset_y + OFFSET_Y_FROM_COMPUTER_CANON + 
+            ISLAND_BELOW_PLAYER_CANON + Y_CRUTCH_COMPUTER_ISLAND, IS_COMPUTER);
+    if (game->current_turn){ // чтобы пушка ходящего не загораживалась чужим островом
+        draw_cannon(ctx, &game->computer_cannon, IS_COMPUTER, &game->cannonball);
+        draw_cannon(ctx, &game->player_cannon, IS_PLAYER, &game->cannonball);
+    }
+    else {draw_cannon(ctx, &game->player_cannon, IS_PLAYER, &game->cannonball);
+        draw_cannon(ctx, &game->computer_cannon, IS_COMPUTER, &game->cannonball);
+    }   
+            
+    present_screen(ctx);
 }
 
 

@@ -73,6 +73,10 @@ typedef struct {
 
 
 void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks);
+void event_processing(GameState* game, const GraphicsContext* ctx, 
+    const GameLandmarks* landmarks);
+void compose_frame(GameState* game, double delta_time, Uint32 current_time, 
+    const GraphicsContext* ctx, const GameLandmarks* landmarks);
 void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, 
     SDL_Renderer* renderer);
 void aim_cannon_at(Cannon* cannon, int target_x, int target_y, 

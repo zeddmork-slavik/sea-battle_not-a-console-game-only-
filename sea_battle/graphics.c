@@ -143,16 +143,17 @@ void draw_ship(const GraphicsContext* ctx, int base_x, int base_y, char grid_x, 
     
     if (direction == 0) { // горизонтальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + grid_x * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) / 2),
-            .y = base_y + grid_y * ctx->cell_size - ((ship_height - ctx->cell_size) / 2),
+            .x = base_x + (int)grid_x * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) >> 1),
+            .y = base_y + (int)grid_y * ctx->cell_size - ((ship_height - ctx->cell_size) >> 1),
             .w = ship_width,
             .h = ship_height
         };
-        printf("x = %d, y = %d", base_x + grid_x * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) / 2), base_y + grid_y * ctx->cell_size - ((ship_height - ctx->cell_size) / 2));
+        //printf("draw_ship: base_x=%d, base_y=%d, grid_x=%d, grid_y=%d\n\n", base_x, base_y, grid_x, grid_y);
+        //printf("x = %d, y = %d", base_x + grid_x * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) / 2), base_y + grid_y * ctx->cell_size - ((ship_height - ctx->cell_size) / 2));
     } else { // вертикальный
         place_for_ship = (SDL_Rect){
-            .x = base_x + X_CRUTCH_VERTICAL_SHIPS + grid_x * ctx->cell_size - ((ship_height - ctx->cell_size) >> 1), 
-            .y = base_y + grid_y * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) >> 1),
+            .x = base_x + X_CRUTCH_VERTICAL_SHIPS + (int)grid_x * ctx->cell_size - ((ship_height - ctx->cell_size) >> 1), 
+            .y = base_y + (int)grid_y * ctx->cell_size - ((ship_width - deck_count * ctx->cell_size) >> 1),
             .w = ship_width,  
             .h = ship_height    
         };

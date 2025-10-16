@@ -5,6 +5,8 @@
 #define MAX_SHIPS 20 // пока 4 четырёхпалубных
 #define EDGE 21
 #define BETWEEN_GRIDS 228
+#define LAST 9 // про столб или строку при проверки валидности клетки
+#define PENULTIMATE 8 // про столб или строку при проверки валидности клетки
 #define LEFT  0 // эти 4 для проверки валидности направлений дальнейшего рассположения клеток у корабля
 #define RIGHT 1  
 #define UP    2
@@ -13,8 +15,6 @@
 typedef struct GraphicsContext GraphicsContext;// Forward Declaration, подобно прототипам у функций
 
 typedef struct GameLandmarks{ 
-    char cell_size;      // ✅ копия из GraphicsContext
-    int field_size;      // ✅ копия из GraphicsContext  
     int player_x; 
     int computer_x; 
     int offset_y;  
@@ -27,11 +27,11 @@ typedef enum {
     CELL_HIT = 3
 } CellState;
 
-typedef struct {
-    char x, y; // это ориентация по клеткам, поэтому char
-    char direction; 
-    char deck_count;
-    char hits;
+typedef struct Ship{
+    unsigned char x, y; // это ориентация по клеткам, когда был знаковым происходила какая-нибудь дичь с псевдослучайками
+    unsigned char direction; 
+    unsigned char deck_count;
+    unsigned char hits;
 } Ship;
 
 typedef struct GameBoard{
@@ -47,7 +47,7 @@ typedef struct GameBoard{
 void init_board(GameBoard* board);
 GameLandmarks calculate_landmarks(const GraphicsContext* ctx);
 void auto_arrange_ships(GameBoard* board);
-char check_place_for_first_deck(const GameBoard* board, char x, char y);
-void check_corners_for_first_deck(const GameBoard* board, char x, char y, char* flag);
+char check_place_for_first_deck(const GameBoard* board, const char x, const char y);
+void check_corners_for_first_deck(const GameBoard* board, const char x, const char y, char* flag);
 //void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count);
 #endif

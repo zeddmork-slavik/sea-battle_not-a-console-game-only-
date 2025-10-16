@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <time.h>
 #include "board.h"
 #include "graphics.h"
 
@@ -29,9 +28,10 @@ GameLandmarks calculate_landmarks(const GraphicsContext* ctx){
     int total_width = 2 * ctx-> field_size + BETWEEN_GRIDS + 2 * EDGE;
     int start_x = (ctx-> width_of_window - total_width) >> 1;  //просто добавляет лишние пиксили к EDGE  
     
-    GameLandmarks landmarks;
-    landmarks.cell_size = ctx-> cell_size;     
-    landmarks.field_size = ctx-> field_size;        
+    //printf("landmarks total_width = %d, start_x = %d, cell_size = %d ;"
+    //"field_size = %d ; player_x = %d ; computer_x = %d, offset_y = %d", total_width, start_x, 
+    //ctx-> cell_size, ctx-> field_size, start_x + EDGE, start_x + EDGE + ctx->field_size + BETWEEN_GRIDS, ctx->height_of_window - ctx->field_size - EDGE);
+    GameLandmarks landmarks;        
     landmarks.player_x = start_x + EDGE; 
     landmarks.computer_x = landmarks.player_x + ctx->field_size + BETWEEN_GRIDS;
     landmarks.offset_y = ctx->height_of_window - ctx->field_size - EDGE; // 179
@@ -42,83 +42,85 @@ GameLandmarks calculate_landmarks(const GraphicsContext* ctx){
 void auto_arrange_ships(GameBoard* board){
     int placed_ships = 0;
     int attempts = 0;
-    int max_attempts = 10000;
+    int max_attempts = 10;
     
-    srand(time(NULL));
     while (placed_ships < 1 && attempts < max_attempts) {
-        char x = (char) rand() % GRID_SIZE;
-        char y = (char) rand() % GRID_SIZE;
-        
+        unsigned char x = rand() % GRID_SIZE;
+        unsigned char y = rand() % GRID_SIZE;
+        printf("GENERATED: x=%u, y=%u\n\n", x, y);
         if(check_place_for_first_deck(board, x, y)){
             board->cells[x][y] = CELL_SHIP;
             board->ships[placed_ships] = (Ship){x, y, 0, 1, 0};
+            //printf("\nplaced_ships = %d\n", placed_ships++);
             placed_ships++;
             board->ship_count++;            
         }
-        
+        // printf("attempt %d", attempts);
         attempts++;
     }
 }   
 
- char check_place_for_first_deck(const GameBoard* board, char x, char y){
-    char flag = 1;
+char check_place_for_first_deck(const GameBoard* board, const char x, const char y){
+    char flag = 0;
     if(board->cells[x][y] == CELL_EMPTY) { // решил налупить 8, 9, нулей и единиц чтоб не допустить лишних вычислений
-        if (x > 0 && x < 9 && y == 0) { // top row except corners
+        if (x > 0 && x < LAST && y == 0) { // top row except corners
             if (board->cells[x + 1][0] == CELL_EMPTY && board->cells[x - 1][0] == CELL_EMPTY 
                 && board->cells[x][1] == CELL_EMPTY && board->cells[x - 1][1] == CELL_EMPTY 
-                && board->cells[x + 1][1] == CELL_EMPTY) {flag = 0;}
+                && board->cells[x + 1][1] == CELL_EMPTY) {flag = 1;}
         }
         
-        if (x > 0 && x < 9 && y == 9) { // bottom row except corners
-            if (board->cells[x + 1][9] == CELL_EMPTY && board->cells[x - 1][9] == CELL_EMPTY 
-                && board->cells[x][8] == CELL_EMPTY && board->cells[x - 1][8] == CELL_EMPTY 
-                && board->cells[x + 1][8] == CELL_EMPTY) {flag = 0;}
+        if (x > 0 && x < LAST && y == LAST) { // bottom row except corners
+            if (board->cells[x + 1][LAST] == CELL_EMPTY && board->cells[x - 1][LAST] == CELL_EMPTY 
+                && board->cells[x][PENULTIMATE] == CELL_EMPTY && board->cells[x - 1][PENULTIMATE] == CELL_EMPTY 
+                && board->cells[x + 1][PENULTIMATE] == CELL_EMPTY) {flag = 1;}
         }
 
-        if (x == 0 && y > 0 && y < 9) { // left col except corners
+        if (x == 0 && y > 0 && y < LAST) { // left col except corners
             if (board->cells[0][y -1] == CELL_EMPTY && board->cells[0][y + 1] == CELL_EMPTY 
                 && board->cells[1][y - 1] == CELL_EMPTY && board->cells[1][y] == CELL_EMPTY 
-                && board->cells[1][y + 1] == CELL_EMPTY) {flag = 0;}
+                && board->cells[1][y + 1] == CELL_EMPTY) {flag = 1;}
         }
     
-        if (x == 9 && y > 0 && y < 9) { // right col except corners
-            if (board->cells [9][y - 1] == CELL_EMPTY && board->cells [9][y + 1] == CELL_EMPTY 
-                && board->cells [8][y - 1] == CELL_EMPTY && board->cells [8][y] == CELL_EMPTY 
-                && board->cells [8][y + 1] == CELL_EMPTY) {flag = 0;}
+        if (x == 9 && y > 0 && y < LAST) { // right col except corners
+            if (board->cells [LAST][y - 1] == CELL_EMPTY && board->cells [LAST][y + 1] == CELL_EMPTY 
+                && board->cells [PENULTIMATE][y - 1] == CELL_EMPTY && board->cells [PENULTIMATE][y] == CELL_EMPTY 
+                && board->cells [PENULTIMATE][y + 1] == CELL_EMPTY) {flag = 1;}
         }    
     
         check_corners_for_first_deck(board, x, y, &flag);
     
-        if (x > 0 && x < 9 && y > 0 && y < 9) { // without borders
+        if (x > 0 && x < LAST && y > 0 && y < LAST) { // without borders
             if (board->cells [x - 1][y - 1] == CELL_EMPTY && board->cells [x - 1][y] == CELL_EMPTY
                 && board->cells [x - 1][y + 1] == CELL_EMPTY && board->cells [x][y - 1] == CELL_EMPTY 
                 && board->cells [x][y + 1] == CELL_EMPTY && board->cells [x + 1][y + 1] == CELL_EMPTY
-                && board->cells [x + 1][y] == CELL_EMPTY && board->cells [x + 1][y - 1] == CELL_EMPTY) {flag = 0;}
+                && board->cells [x + 1][y] == CELL_EMPTY && board->cells [x + 1][y - 1] == CELL_EMPTY) {flag = 1;}
         }
     }
+
+    //printf("\nflag %d", flag);
     return flag;
 }
 
-void check_corners_for_first_deck(const GameBoard* board, char x, char y, char* flag){
+void check_corners_for_first_deck(const GameBoard* board, const char x, const char y, char* flag){
     
-    if (x == 9 && y == 0) { // top right corner
-            if (board->cells [9][1] == CELL_EMPTY && board->cells [8][0] == CELL_EMPTY 
-                && board->cells [8][1] == CELL_EMPTY) {*flag = 0;}
+    if (x == LAST && y == 0) { // top right corner
+            if (board->cells [LAST][1] == CELL_EMPTY && board->cells [8][0] == CELL_EMPTY 
+                && board->cells [PENULTIMATE][1] == CELL_EMPTY) {*flag = 1;}
     }
 
-    if (x == 9 && y == 9) { // bottom right corner
-            if (board->cells [9][8] == CELL_EMPTY && board->cells [8][9] == CELL_EMPTY 
-                && board->cells [8][8] == CELL_EMPTY)  {*flag = 0;}
+    if (x == LAST && y == LAST) { // bottom right corner
+            if (board->cells [LAST][PENULTIMATE] == CELL_EMPTY && board->cells [PENULTIMATE][LAST] == CELL_EMPTY 
+                && board->cells [PENULTIMATE][PENULTIMATE] == CELL_EMPTY)  {*flag = 1;}
     }  
 
-    if (x == 0 && y == 9) { // bottom left corner
-            if (board->cells [0][8] == CELL_EMPTY && board->cells [1][9] == CELL_EMPTY 
-                && board->cells [1][8] == CELL_EMPTY) {*flag = 0;}
+    if (x == 0 && y == LAST) { // bottom left corner
+            if (board->cells [0][PENULTIMATE] == CELL_EMPTY && board->cells [1][LAST] == CELL_EMPTY 
+                && board->cells [1][PENULTIMATE] == CELL_EMPTY) {*flag = 1;}
     }  
 
     if (x == 0 && y == 0) { // top left corner
             if (board->cells [0][1] == CELL_EMPTY && board->cells [1][0] == CELL_EMPTY 
-                && board->cells [1][1] == CELL_EMPTY) {*flag = 0;}
+                && board->cells [1][1] == CELL_EMPTY) {*flag = 1;}
     }  
 }
 

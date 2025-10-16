@@ -38,7 +38,7 @@ typedef struct GraphicsContext{ // рендерер, главное окно и 
     SDL_Renderer* renderer; // рисовальщик
     int width_of_window;
     int height_of_window;
-    char cell_size; // размер игровой клетки поля в пикселях, каждая клетка игрового поля будет занимать cell_size Х cell_size пикселей на экране.
+    unsigned char cell_size; // размер игровой клетки поля в пикселях, каждая клетка игрового поля будет занимать cell_size Х cell_size пикселей на экране.
     int field_size;
     SDL_Texture* ship_jup_1p;    // однопалубный
     SDL_Texture* ship_jup_2p;  // двухпалубный   
