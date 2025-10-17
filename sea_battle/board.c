@@ -135,9 +135,9 @@ void place_for_others_decks(const GameBoard* board, char x, char y, char deck_co
     if (can_go_down)  valid_mask |= (1 << DOWN);   // включили DOWN
 
     // 3. Проверяем конкретное направление
-    if (valid_mask & (1 << LEFT)) {
-    printf("Можно идти влево!\n");
-    }
+    //if (valid_mask & (1 << LEFT)) {
+    //printf("Можно идти влево!\n");
+    //}
 
     // 4. Считаем сколько направлений доступно
     int count = 0;

@@ -50,4 +50,10 @@ void auto_arrange_ships(GameBoard* board);
 char check_place_for_first_deck(const GameBoard* board, const char x, const char y);
 void check_corners_for_first_deck(const GameBoard* board, const char x, const char y, char* flag);
 //void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count);
+
+
+char can_go_left(const GameBoard* board, char x, char y);
+char can_go_right(const GameBoard* board, char x, char y); 
+
+
 #endif
