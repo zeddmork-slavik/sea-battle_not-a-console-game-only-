@@ -44,12 +44,12 @@ void auto_arrange_ships(GameBoard* board){
     int attempts = 0;
     int max_attempts = 10;
     
-    while (placed_ships < 1 && attempts < max_attempts) {
+    while (placed_ships < 4 && attempts < max_attempts) {
         unsigned char x = rand() % GRID_SIZE;
         unsigned char y = rand() % GRID_SIZE;
         printf("GENERATED: x=%u, y=%u\n\n", x, y);
         if(check_place_for_first_deck(board, x, y)){
-            board->cells[x][y] = CELL_SHIP;
+            board->cells[x][y] = CELL_SHIP; // пустить через условие 1 палубности, для других будем делать запись иначе
             board->ships[placed_ships] = (Ship){x, y, 0, 1, 0};
             //printf("\nplaced_ships = %d\n", placed_ships++);
             placed_ships++;
@@ -125,12 +125,12 @@ void check_corners_for_first_deck(const GameBoard* board, const char x, const ch
 }
 
 
-/*void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count){
+void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count){
     char valid_mask = 0;
 
     // 2. Включаем выключатели для валидных направлений
-    if (can_go_left)  valid_mask |= (1 << LEFT);   // включили LEFT
-    if (can_go_right) valid_mask |= (1 << RIGHT);  // включили RIGHT
+    if (can_go_left(board, x, y))  valid_mask |= (1 << LEFT);   // включили LEFT
+    if (can_go_right(board, x, y)) valid_mask |= (1 << RIGHT);  // включили RIGHT
     if (can_go_up)    valid_mask |= (1 << UP);     // включили UP
     if (can_go_down)  valid_mask |= (1 << DOWN);   // включили DOWN
 
@@ -148,17 +148,68 @@ void check_corners_for_first_deck(const GameBoard* board, const char x, const ch
 }
 
 // 5. Выбираем случайное направление
-int random_index = rand() % count;
-int current = 0;
-for (int i = 0; i < 4; i++) {
-    if (valid_mask & (1 << i)) {
-        if (current == random_index) {
-            int direction = i;  // нашли направление!
-            break;
+    int random_index = rand() % count;
+    int current = 0;
+    for (int i = 0; i < 4; i++) {
+        if (valid_mask & (1 << i)) {
+            if (current == random_index) {
+                int direction = i;  // нашли направление!
+                break;
+            }
+            current++;
         }
-        current++;
     }
+
+}
+
+char can_go_left(const GameBoard* board, char x, char y){
+    char flag = 0; 
+
+    if (x != 0) { 
+        if (x == 1) {
+            flag = 1; // ✅ Уже проверено в check_place_for_first_deck()
+        } 
+        else if (y == 0) {
+            flag = (board->cells[x - 2][0] == CELL_EMPTY && 
+                    board->cells[x - 2][1] == CELL_EMPTY);
+        }
+        else if (y >= 1 && y <= PENULTIMATE) {
+            flag = (board->cells[x - 2][y - 1] == CELL_EMPTY && 
+            board->cells[x - 2][y] == CELL_EMPTY && 
+            board->cells[x - 2][y + 1] == CELL_EMPTY);
+        }
+        else if (y == LAST) {
+            flag = (board->cells[x - 2][PENULTIMATE] == CELL_EMPTY && 
+            board->cells[x - 2][LAST] == CELL_EMPTY);
+        }
+    }
+    
+    return flag; 
+}
+
+char can_go_right(const GameBoard* board, char x, char y){
+    char flag = 0; 
+
+    if (x != LAST) { 
+        if (x == PENULTIMATE) {
+            flag = 1; // ✅ Уже проверено в check_place_for_first_deck()
+        } 
+        else if (y == 0) {
+            flag = (board->cells[x + 2][0] == CELL_EMPTY && 
+                    board->cells[x + 2][1] == CELL_EMPTY);
+        }
+        else if (y >= 1 && y <= PENULTIMATE) {
+            flag = (board->cells[x + 2][y - 1] == CELL_EMPTY && 
+            board->cells[x + 2][y] == CELL_EMPTY && 
+            board->cells[x + 2][y + 1] == CELL_EMPTY);
+        }
+        else if (y == LAST) {
+            flag = (board->cells[x + 2][PENULTIMATE] == CELL_EMPTY && 
+            board->cells[x + 2][LAST] == CELL_EMPTY);
+        }
+    }
+    
+    return flag; 
 }
 
 
-}*/

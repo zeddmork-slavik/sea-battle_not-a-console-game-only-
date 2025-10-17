@@ -27,35 +27,6 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     game.cannonball.rotation_speed = 720.0;    // 720°/секунду = 2 оборота в секунду
     
     event_processing(&game, ctx, landmarks);
-    /*SDL_Event event;
-        while (game.running) {
-            Uint32 current_time = SDL_GetTicks(); // текущее время каждого кадра
-            // Обработка событий
-            while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_QUIT) {
-                    game.running = DONT_RUNNING;
-                }
-                else if (event.type == SDL_MOUSEBUTTONDOWN && 
-                    event.button.button == SDL_BUTTON_LEFT) {
-                    int mouse_x = event.button.x;
-                    int mouse_y = event.button.y;
-        
-                    // Проверяем клик по полю компьютера
-                    if (mouse_x >= landmarks->computer_x && 
-                        mouse_x <= landmarks->computer_x + ctx->field_size &&
-                        mouse_y >= landmarks->offset_y && 
-                        mouse_y <= landmarks->offset_y + ctx->field_size) {
-            
-                        aim_cannon_at(&game.player_cannon, mouse_x, mouse_y, ctx,
-                            landmarks, &game.cannonball);
-                    }
-                }
-            }
-         
-            compose_frame(&game, delta_time, current_time, ctx, landmarks);
-        
-            SDL_Delay(33); // ~30 FPS для пошаговой игры
-    }*/
 }
 
 void event_processing(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks){
