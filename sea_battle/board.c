@@ -54,14 +54,13 @@ void auto_arrange_ships(GameBoard* board){
         while(!success && attempts < max_attempts_per_ship) {
             char x = rand() % GRID_SIZE;
             char y = rand() % GRID_SIZE;
-            //printf("GENERATED: x=%u, y=%u\n\n", x, y);
+            char direction = 0;
             if(check_place_for_first_deck(board, x, y)){
-                if(board->ships[i].deck_count == 1) 
-                    {add_ship_to_gameBoard(board, x, y, ship_index, 0); success = 1;
+                if(board->ships[ship_index].deck_count == 1) 
+                    {add_ship_to_gameBoard(board, x, y, ship_index, direction); success = 1;
                 } 
-                char direction = place_for_others_decks(board,  &x, &y, board->ships[i].deck_count);
-                else if (direction = 2){
-                    add_ship_to_gameBoard(board, x, y, ship_index, direction); ; success = 1;
+                else if (place_for_others_decks(board,  &x, &y, board->ships[ship_index].deck_count, &direction))
+                    {add_ship_to_gameBoard(board, x, y, ship_index, direction); ; success = 1;
                 }    
             }
             attempts++;
@@ -69,26 +68,70 @@ void auto_arrange_ships(GameBoard* board){
     } 
 }  
 
-void add_ship_to_gameBoard(GameBoard* board, const char xh, const char yh, const char ship_index, const char direction){
-    board->ships[ship_index].x = xh;
-    board->ships[ship_index].y = yh;
+void add_ship_to_gameBoard(GameBoard* board, char x, char y, const char ship_index, const char direction){
+    board->ships[ship_index].x = x;
+    board->ships[ship_index].y = y;
     
-    // direction для однопалубных не заполняем, дефолтный 0 это горизонтальный
-    if(board->ships[ship_index].deck_count > 1){
+    board->ships[ship_index].direction = direction; // direction дефолтный 0 хотел через условие чтобы не присваивать одно и то же, но кит говорит так оптимальнее
         
         
+    for(char placed_deck = 0; placed_deck < board->ships[ship_index].deck_count; placed_deck++){
+            board->cells[x][y] = CELL_SHIP;
+            (board->ships[ship_index].direction == 0) ? x++ : y++;
+    }    
         
-        
-        
-        
-        board->ships[ship_index].} 
-
-
-
-
-
-
     board->ship_count++;
+}
+
+char place_for_others_decks(const GameBoard* board, char* x, char* y, const char deck_count, char* direction){
+    char flag = 0;
+    char valid_mask = 0;
+
+    // 2. Включаем выключатели для валидных направлений
+    if (can_go_left(board, *x, *y))  valid_mask |= (1 << LEFT);   // включили LEFT
+    if (can_go_right(board, *x, *y)) valid_mask |= (1 << RIGHT);  // включили RIGHT
+    if (can_go_up(board, *x, *y))    valid_mask |= (1 << UP);     // включили UP
+    if (can_go_down(board, *x, *y))  valid_mask |= (1 << DOWN);   // включили DOWN
+
+    // 3. Проверяем конкретное направление
+    //if (valid_mask & (1 << LEFT)) {
+    //printf("Можно идти влево!\n");
+    //}
+    char direction_for_growing = select_random_direction(valid_mask);
+
+    if(direction_for_growing != INVALID_DIRECTION){ 
+        flag = 1;
+        
+        if(direction_for_growing == UP || direction_for_growing == DOWN) {
+            *direction = 1;
+        }
+   
+        if(direction_for_growing == LEFT) {*x -= 1;} // !!!!!!!!!!! пока только для вершины двухпалубных, для трёшек нужно будет учитывать все направления
+        if(direction_for_growing == UP) {*y -= 1;}   
+    }
+    return flag;
+}
+
+char select_random_direction(const char valid_mask) {
+    char count = 0;
+    char directions[4]; // Массив для валидных направлений
+    char selected_direction = INVALID_DIRECTION;
+    
+    // Собираем все валидные направления в массив
+    for (char i = 0; i < 4; i++) {
+        if (valid_mask & (1 << i)) {
+            directions[count] = i;
+            count++;
+        }
+    }
+    
+    // Выбираем случайное из собранных
+    if (count > 0) {
+        char random_index = rand() % count;
+        selected_direction = directions[random_index];
+    }
+    
+    return selected_direction;
 }
 
 char check_place_for_first_deck(const GameBoard* board, const char x, const char y){
@@ -153,27 +196,6 @@ void check_corners_for_first_deck(const GameBoard* board, const char x, const ch
             if (board->cells [0][1] == CELL_EMPTY && board->cells [1][0] == CELL_EMPTY 
                 && board->cells [1][1] == CELL_EMPTY) {*flag = 1;}
     }  
-}
-
-
-char place_for_others_decks(const GameBoard* board, char* x, char* y, const char deck_count){
-    char direction_for_vertical_ship = 2; // недопустимое значение чтобы можно было использовать как флаг
-    char valid_mask = 0;
-
-    // 2. Включаем выключатели для валидных направлений
-    if (can_go_left(board, *x, *y))  valid_mask |= (1 << LEFT);   // включили LEFT
-    if (can_go_right(board, *x, *y)) valid_mask |= (1 << RIGHT);  // включили RIGHT
-    if (can_go_up(board, *x, *y))    valid_mask |= (1 << UP);     // включили UP
-    if (can_go_down(board, *x, *y))  valid_mask |= (1 << DOWN);   // включили DOWN
-
-    // 3. Проверяем конкретное направление
-    //if (valid_mask & (1 << LEFT)) {
-    //printf("Можно идти влево!\n");
-    //}
-    char direc = select_random_direction(valid_mask) 
-   
-  
-    return direction_for_vertical_ship;
 }
 
 char can_go_left(const GameBoard* board, char x, char y){
@@ -274,24 +296,4 @@ char can_go_down(const GameBoard* board, char x, char y){
     return flag; 
 }
 
-char select_random_direction(const char valid_mask) {
-    char count = 0;
-    char directions[4]; // Массив для валидных направлений
-    char selected_direction = INVALID_DIRECTION;
-    
-    // Собираем все валидные направления в массив
-    for (char i = 0; i < 4; i++) {
-        if (valid_mask & (1 << i)) {
-            directions[count] = i;
-            count++;
-        }
-    }
-    
-    // Выбираем случайное из собранных
-    if (count > 0) {
-        char random_index = rand() % count;
-        selected_direction = directions[random_index];
-    }
-    
-    return selected_direction;
-}
+
