@@ -2,7 +2,7 @@
 #define BOARD_H
 
 #define GRID_SIZE 10  // нейронка пообещала что в интересах cells приведёт сам к (char)
-#define MAX_SHIPS 20 // пока 4 четырёхпалубных
+#define MAX_SHIPS 10 // пока 4 четырёхпалубных
 #define EDGE 21
 #define BETWEEN_GRIDS 228
 #define LAST 9 // про столб или строку при проверки валидности клетки
@@ -11,6 +11,7 @@
 #define RIGHT 1  
 #define UP    2
 #define DOWN  3
+#define INVALID_DIRECTION 7 // во какой скрюченный
 
 typedef struct GraphicsContext GraphicsContext;// Forward Declaration, подобно прототипам у функций
 
@@ -28,10 +29,10 @@ typedef enum {
 } CellState;
 
 typedef struct Ship{
-    unsigned char x, y; // это ориентация по клеткам, когда был знаковым происходила какая-нибудь дичь с псевдослучайками
-    unsigned char direction; 
-    unsigned char deck_count;
-    unsigned char hits;
+    char x, y; // это ориентация по клеткам, когда был знаковым происходила какая-нибудь дичь с псевдослучайками
+    char direction; 
+    char deck_count;
+    char hits;
 } Ship;
 
 typedef struct GameBoard{
@@ -47,7 +48,16 @@ typedef struct GameBoard{
 void init_board(GameBoard* board);
 GameLandmarks calculate_landmarks(const GraphicsContext* ctx);
 void auto_arrange_ships(GameBoard* board);
+void add_ship_to_gameBoard(GameBoard* board, char x, char y, const char ship_index, const char direction);
+char place_for_others_decks(const GameBoard* board, char* x, char* y, const char deck_count, char* direction);
+char select_random_direction(const char valid_mask); 
+
 char check_place_for_first_deck(const GameBoard* board, const char x, const char y);
 void check_corners_for_first_deck(const GameBoard* board, const char x, const char y, char* flag);
-//void place_for_others_decks(const GameBoard* board, char x, char y, char deck_count);
+
+
+char can_go_left(const GameBoard* board, char x, char y);
+char can_go_right(const GameBoard* board, char x, char y); 
+char can_go_up(const GameBoard* board, char x, char y);
+char can_go_down(const GameBoard* board, char x, char y);
 #endif
