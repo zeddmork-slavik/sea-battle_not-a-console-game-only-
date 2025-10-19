@@ -28,6 +28,8 @@
 typedef struct GameBoard GameBoard;
 typedef struct GraphicsContext GraphicsContext;
 typedef struct GameLandmarks GameLandmarks;
+typedef struct Mix_Chunk Mix_Chunk;
+typedef struct Mix_Music Mix_Music;
 
 typedef struct Cannon{ // без имени компилятор ананимусом обзывается
     SDL_Texture* canon_platform_texture;    // неподвижная опора
@@ -50,6 +52,7 @@ typedef struct Cannonball{
     SDL_Texture* texture;
     int start_x, start_y;     // точка вылета (срез ствола)
     int target_x, target_y;   // центр целевой клетки
+    char target_cell_x, target_cell_y;  
     int current_x, current_y; // текущая позиция
     float progress;           // 0.0 → 1.0 (пройденный путь) ради параболического полёта - первую половину подымаемся вторую опускаемся
     Uint32 start_time;        // время запуска
@@ -59,6 +62,14 @@ typedef struct Cannonball{
     float parabola_height;  // 🆕 высота параболы
 } Cannonball;
 
+typedef struct GameAudio{
+    Mix_Chunk* cannon_shot;    // выстрел пушки
+    /*Mix_Chunk* water_splash;   // промах 
+    Mix_Chunk* ship_hit;       // попадание в корабль*/
+    Mix_Chunk* victory;        // победа
+    //Mix_Music* background;     // фоновая музыка
+} GameAudio;
+
 typedef struct {
     char running;
     GameBoard* player_board;
@@ -67,16 +78,16 @@ typedef struct {
     Cannon computer_cannon;
     Cannonball cannonball;
     char current_turn;  // 🆕 PLAYER_TURN или COMPUTER_TURN
-    // позже добавим состояние игры (расстановка, ход игрока и т.д.)
+    GameAudio audio; // позже добавим состояние игры (расстановка, ход игрока и т.д.)
 } GameState;
 
 
 
 void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks);
 void event_processing(GameState* game, const GraphicsContext* ctx, 
-    const GameLandmarks* landmarks);
+    const GameLandmarks* landmarks, GameAudio* audio);
 void compose_frame(GameState* game, double delta_time, Uint32 current_time, 
-    const GraphicsContext* ctx, const GameLandmarks* landmarks);
+    const GraphicsContext* ctx, const GameLandmarks* landmarks, GameAudio* audio);
 void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, 
     SDL_Renderer* renderer);
 void aim_cannon_at(Cannon* cannon, int target_x, int target_y, 
@@ -84,5 +95,11 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y,
     Cannonball* cannonball);
 void update_cannon_animation(Cannon* cannon, double delta_time);
 void fire_cannonball(Cannonball* ball, const Cannon* cannon, Uint32 current_time);
-void update_cannonball(Cannonball* ball, Uint32 current_time);
+void update_cannonball(GameState* game, Uint32 current_time);
+void reset_cannonball(Cannonball* ball)
+void process_shot_result(GameState* game);
+GameAudio* load_audio();
+void play_cannon_shot(GameAudio* audio);
+void play_victory(GameAudio* audio);
+void cleanup_audio(GameAudio* audio);
 #endif

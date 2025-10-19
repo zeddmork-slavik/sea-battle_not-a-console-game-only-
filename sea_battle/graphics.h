@@ -1,10 +1,6 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-//#include standart libraries and other headers
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-
 #define WIDTH 1270
 #define HEIGHT 700
 #define CELL_SIZE 50
@@ -24,10 +20,18 @@
 #define OFFSET_Y_FROM_FIRE_OF_CANON - 3
 #define PIVOT_X_FROM_FIRE_OF_CANON -76
 #define PIVOT_Y_FROM_FIRE_OF_CANON 58
+#define WIDTH_SPRAY_TEXTURE 50
+#define HEIGHT_SPRAY_TEXTURE 66
 
 typedef struct GameBoard GameBoard;
 typedef struct Cannon Cannon;
 typedef struct Cannonball Cannonball;
+typedef struct SDL_Window SDL_Window;
+typedef struct SDL_Renderer SDL_Renderer;
+typedef struct SDL_Texture SDL_Texture;
+typedef struct GameAudio GameAudio;
+
+
 
 typedef struct {
     int width, height;   
@@ -46,6 +50,7 @@ typedef struct GraphicsContext{ // рендерер, главное окно и 
     SDL_Texture* ship_jup_4p;  // четырехпалубный
     SDL_Texture* player_island_texture;
     SDL_Texture* computer_island_texture; 
+    SDL_Texture* spray_texture; // брызги
 } GraphicsContext; 
 
 

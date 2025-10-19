@@ -23,9 +23,8 @@ typedef struct GameLandmarks{
 
 typedef enum {
     CELL_EMPTY = 0,
-    CELL_SHIP = 1,
-    CELL_MISS = 2, 
-    CELL_HIT = 3
+    CELL_SHIP = 1, 
+    CELL_FIRE = 2
 } CellState;
 
 typedef struct Ship{

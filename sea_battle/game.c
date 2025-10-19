@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "game.h"
 #include "graphics.h"
 #include "board.h"
@@ -26,10 +27,30 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     game.cannonball.texture = load_texture_from_file(ctx->renderer, "../images/cannonball.png");
     game.cannonball.rotation_speed = 720.0;    // 720°/секунду = 2 оборота в секунду
     
-    event_processing(&game, ctx, landmarks);
+    char audio_initialized = 0;
+    GameAudio* audio = NULL;
+    
+    // Инициализация аудиосистемы
+    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) == 0) {
+        audio = load_audio();
+        if (audio) {
+            audio_initialized = 1;
+        }
+    }
+    
+    if (!audio_initialized) {
+        printf("Audio system unavailable - continuing without sound\n");
+    }
+    
+    event_processing(&game, ctx, landmarks, audio);
+    
+    if (audio_initialized) {
+        cleanup_audio(audio);
+        Mix_CloseAudio();
+    }
 }
 
-void event_processing(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks){
+void event_processing(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks, GameAudio* audio){
     
     double delta_time = BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME;
     SDL_Event event;
@@ -56,20 +77,21 @@ void event_processing(GameState* game, const GraphicsContext* ctx, const GameLan
                 }
             }
          
-            compose_frame(game, delta_time, current_time, ctx, landmarks);
+            compose_frame(game, delta_time, current_time, ctx, landmarks, audio);
         
             SDL_Delay(33); // ~30 FPS для пошаговой игры
         }
 }
 
-void compose_frame(GameState* game, double delta_time, Uint32 current_time, const GraphicsContext* ctx, const GameLandmarks* landmarks){
+void compose_frame(GameState* game, double delta_time, Uint32 current_time, const GraphicsContext* ctx, const GameLandmarks* landmarks, GameAudio* audio){
     update_cannon_animation(&game->player_cannon, delta_time);
-    update_cannonball(&game->cannonball, current_time);
+    update_cannonball(&game, current_time);
     if (!game->player_cannon.is_animating && 
         game->player_cannon.animation_end_time != 0) {
         if (current_time - game->player_cannon.animation_end_time >= 
             game->player_cannon.fire_delay) {
             game->player_cannon.is_firing = 1;
+            play_cannon_shot(audio); 
             game->player_cannon.animation_end_time = 0;
             fire_cannonball(&game->cannonball, &game->player_cannon, current_time);
         }
@@ -146,12 +168,12 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y, const GraphicsCon
     cannon->is_animating = ANIMATING;
 
 
-    int cell_x = (target_x - landmarks->computer_x) / ctx->cell_size;
-    int cell_y = (target_y - landmarks->offset_y) / ctx->cell_size;
+    cannonball->target_cell_x = (target_x - landmarks->computer_x) / ctx->cell_size;
+    cannonball->target_cell_y = (target_y - landmarks->offset_y) / ctx->cell_size;
     
 
-    cannonball->target_x = landmarks->computer_x + cell_x * ctx->cell_size + (ctx->cell_size >> 1);
-    cannonball->target_y = landmarks->offset_y + cell_y * ctx->cell_size + (ctx->cell_size >> 1);
+    cannonball->target_x = landmarks->computer_x + cannonball->target_cell_x * ctx->cell_size + (ctx->cell_size >> 1);
+    cannonball->target_y = landmarks->offset_y + cannonball->target_cell_y * ctx->cell_size + (ctx->cell_size >> 1);
 }
 
 void update_cannon_animation(Cannon* cannon, double delta_time) {
@@ -203,23 +225,92 @@ void fire_cannonball(Cannonball* ball, const Cannon* cannon, Uint32 current_time
     ball->parabola_height = distance * 0.15f; // 15% от расстояния (регулируй)
 }
 
-void update_cannonball(Cannonball* ball, Uint32 current_time) {
+void update_cannonball(GameState* game, Uint32 current_time) {
     // Выходим если ядро не активно
-    if (ball->is_active) {
-        float elapsed = (current_time - ball->start_time) / (float)ball->flight_duration;
-        ball->progress = elapsed;
+    if (game->cannonball.is_active) {
+        float elapsed = (current_time - game->cannonball.start_time) / (float)game->cannonball.flight_duration;
+        game->cannonball.progress = elapsed;
 
         if (elapsed < 1.0f) {
             // Ядро ещё летит
-            ball->rotation_angle += ball->rotation_speed * BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME;
+            game->cannonball.rotation_angle += game->cannonball.rotation_speed * BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME;
             
             // Баллистическая траектория
-            ball->current_x = ball->start_x + (ball->target_x - ball->start_x) * ball->progress;
-            float parabola = 4.0f * ball->progress * (1.0f - ball->progress);
+            game->cannonball.current_x = game->cannonball.start_x + (game->cannonball.target_x - game->cannonball.start_x) * game->cannonball.progress;
+            float parabola = 4.0f * game->cannonball.progress * (1.0f - game->cannonball.progress);
             // 🎯 Используем динамическую высоту параболы:
-            ball->current_y = ball->start_y + (ball->target_y - ball->start_y) * ball->progress - parabola * ball->parabola_height;
+            game->cannonball.current_y = game->cannonball.start_y + (game->cannonball.target_y - game->cannonball.start_y) * game->cannonball.progress - parabola * game->cannonball.parabola_height;
         } else {
-            ball->is_active = 0;
+            process_shot_result(game);
+            reset_cannonball(&game->cannonball); // вместо с выключением is_active обнулим всю структуру
         }
     }
+}
+
+void reset_cannonball(Cannonball* ball){
+    ball->is_active = 0;
+    ball->start_x = 0; 
+    ball->start_y = 0;
+    ball->target_x = 0;
+    ball->target_y = 0;
+    ball->target_cell_x = 0;
+    ball->target_cell_y = 0;
+    ball->current_x = 0;
+    ball->current_y = 0;
+    ball->progress = 0;
+    ball->start_time = 0;
+    ball->flight_duration = 0;
+    ball->rotation_angle = 0;
+    ball->parabola_height = 0;
+}
+
+void process_shot_result(GameState* game){
+    
+    if(game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] == 1){
+        game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] = 2;
+    }
+    else if()
+    → check_hit_or_miss()
+    → update_cell_state() 
+    → check_ship_sunk()
+    → update_sunk_counter()
+
+
+}
+
+GameAudio* load_audio() {
+    GameAudio* audio = malloc(sizeof(GameAudio));
+    if (!audio) return NULL;
+    
+    audio->cannon_shot = Mix_LoadWAV("../sounds/cannon_shot.mp3");
+    if (!audio->cannon_shot) {
+        printf("Failed to load cannon_shot.mp3: %s\n", Mix_GetError());
+    }
+    audio->victory = Mix_LoadWAV("../sounds/victory.mp3");
+    if (!audio->victory) {
+        printf("Failed to load victory.mp3: %s\n", Mix_GetError());
+    }
+    /* Остальные звуки пока заглушки
+    audio->water_splash = NULL;
+    audio->ship_hit = NULL;
+    audio->background = NULL;*/
+    
+    return audio;
+}
+
+void play_cannon_shot(GameAudio* audio) {
+    if (audio && audio->cannon_shot) {
+        Mix_PlayChannel(-1, audio->cannon_shot, 0);// автовыбор потока, ,количество повторений
+    }
+}
+
+void play_victory(GameAudio* audio) {// !!!!!!!!!!!!!!!!!!!!!!!!!  пока никуда не вставляли
+    if (audio && audio->victory) {
+        Mix_PlayChannel(-1, audio->victory, 0);
+    }
+}
+
+void cleanup_audio(GameAudio* audio) {
+    Mix_FreeChunk(audio->cannon_shot); 
+    free(audio);
 }

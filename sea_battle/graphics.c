@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include "graphics.h"
 #include "board.h"
 #include "game.h"
@@ -43,6 +45,7 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.ship_jup_4p = load_texture_from_file(renderer, "../images/ship_jup_4p.png");
     ctx.player_island_texture = load_texture_from_file(renderer, "../images/player_island.png");
     ctx.computer_island_texture = load_texture_from_file(renderer, "../images/computer_island.png");
+    ctx.spray_texture = load_texture_from_file(renderer, "../images/spray.png");
     return ctx;
 }
 
@@ -263,4 +266,15 @@ void draw_cannonball(const GraphicsContext* ctx, const Cannonball* core) {
         &pivot,
         SDL_FLIP_NONE
     );
+}
+
+void draw_spray(const GraphicsContext* ctx, ){
+    SDL_Rect spray = {
+        .x = base_x,      
+        .y = base_y,
+        .w = WIDTH_SPRAY_TEXTURE,
+        .h = HEIGHT_SPRAY_TEXTURE,
+    };
+
+    SDL_RenderCopy(ctx->renderer, ctx->spray_texture, NULL, &spray);
 }
