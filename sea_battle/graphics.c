@@ -43,6 +43,14 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.ship_jup_2p = load_texture_from_file(renderer, "../images/ship_jup_2p.png");
     ctx.ship_jup_3p = load_texture_from_file(renderer, "../images/ship_jup_3p.png");
     ctx.ship_jup_4p = load_texture_from_file(renderer, "../images/ship_jup_4p.png");
+    ctx.fire_ship1 = load_texture_from_file(renderer, "../images/fire_ship1.png");
+    ctx.fire_ship2 = load_texture_from_file(renderer, "../images/fire_ship2.png");
+    ctx.fire_ship3 = load_texture_from_file(renderer, "../images/fire_ship3.png");
+    ctx.fire_ship4 = load_texture_from_file(renderer, "../images/fire_ship4.png");
+    ctx.fire_ship5 = load_texture_from_file(renderer, "../images/fire_ship5.png");
+    ctx.fire_ship6 = load_texture_from_file(renderer, "../images/fire_ship6.png");
+    ctx.fire_ship7 = load_texture_from_file(renderer, "../images/fire_ship7.png");
+    ctx.fire_ship8 = load_texture_from_file(renderer, "../images/fire_ship8.png");
     ctx.player_island_texture = load_texture_from_file(renderer, "../images/player_island.png");
     ctx.computer_island_texture = load_texture_from_file(renderer, "../images/computer_island.png");
     ctx.spray_texture = load_texture_from_file(renderer, "../images/spray.png");
@@ -268,13 +276,20 @@ void draw_cannonball(const GraphicsContext* ctx, const Cannonball* core) {
     );
 }
 
-void draw_spray(const GraphicsContext* ctx, ){
-    SDL_Rect spray = {
-        .x = base_x,      
-        .y = base_y,
-        .w = WIDTH_SPRAY_TEXTURE,
-        .h = HEIGHT_SPRAY_TEXTURE,
-    };
+void draw_spray(const GraphicsContext* ctx, GameState* game){
 
-    SDL_RenderCopy(ctx->renderer, ctx->spray_texture, NULL, &spray);
+    if (game->spray_alpha > 0) {
+        SDL_SetTextureAlphaMod(ctx->spray_texture, game->spray_alpha);
+    
+
+        SDL_Rect spray = {
+            .x = game->spray_x,      
+            .y = game->spray_y,
+            .w = WIDTH_SPRAY_TEXTURE,
+            .h = HEIGHT_SPRAY_TEXTURE,
+        };
+    
+        SDL_RenderCopy(ctx->renderer, ctx->spray_texture, NULL, &spray);
+        SDL_SetTextureAlphaMod(ctx->spray_texture, 255);
+    }
 }

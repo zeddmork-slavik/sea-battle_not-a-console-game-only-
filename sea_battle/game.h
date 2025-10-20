@@ -19,11 +19,13 @@
 #define COMPUTER_CANNON_PIVOT_Y 43
 #define DELAY_FIRE_CANON 500 // 0.5 секунды
 #define STARTING_TRANSPARENCY 255 // совсем не прозрачная
-#define SPEED_TRANSPARENCY_BY_FRAME 5
+#define SPEED_TRANSPARENCY_BY_FRAME 5 // этот для огня пушки и брызгов
 #define BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME 0.033
 #define ANGLE_BETWEEN_DIRECTION_PLAYER_BARREL_AND_ITS_TEXTURE -7.0
 #define PLAYER_BARREL_LENGTH 82
 #define SPEED_CONNONBALL 220.0f
+#define DURATION_OF_SPLASHES 1000
+#define Y_CRUTCH_FOR_SPLASHES 8
 
 typedef struct GameBoard GameBoard;
 typedef struct GraphicsContext GraphicsContext;
@@ -64,20 +66,25 @@ typedef struct Cannonball{
 
 typedef struct GameAudio{
     Mix_Chunk* cannon_shot;    // выстрел пушки
-    /*Mix_Chunk* water_splash;   // промах 
+    Mix_Chunk* water_splash;   // промах 
     Mix_Chunk* ship_hit;       // попадание в корабль*/
     Mix_Chunk* victory;        // победа
     //Mix_Music* background;     // фоновая музыка
 } GameAudio;
 
-typedef struct {
+typedef struct GameState{
     char running;
     GameBoard* player_board;
     GameBoard* computer_board;
     Cannon player_cannon;
     Cannon computer_cannon;
     Cannonball cannonball;
-    char current_turn;  // 🆕 PLAYER_TURN или COMPUTER_TURN
+    int current_turn;  // 🆕 PLAYER_TURN или COMPUTER_TURN
+    char show_spray;
+    Uint32 spray_end_time;
+    int spray_x;
+    int spray_y;
+    unsigned char spray_alpha; 
     GameAudio audio; // позже добавим состояние игры (расстановка, ход игрока и т.д.)
 } GameState;
 
@@ -95,11 +102,14 @@ void aim_cannon_at(Cannon* cannon, int target_x, int target_y,
     Cannonball* cannonball);
 void update_cannon_animation(Cannon* cannon, double delta_time);
 void fire_cannonball(Cannonball* ball, const Cannon* cannon, Uint32 current_time);
-void update_cannonball(GameState* game, Uint32 current_time);
-void reset_cannonball(Cannonball* ball)
-void process_shot_result(GameState* game);
+void update_cannonball(const GraphicsContext* ctx, GameState* game, const GameLandmarks* landmarks, Uint32 current_time, GameAudio* audio);
+void reset_cannonball(Cannonball* ball);
+void process_shot_result(const GraphicsContext* ctx, GameState* game, const GameLandmarks* landmarks, Uint32 current_time, GameAudio* audio);
 GameAudio* load_audio();
 void play_cannon_shot(GameAudio* audio);
+void play_water_splash(GameAudio* audio);
 void play_victory(GameAudio* audio);
+void cleanup_game(GameState* game);
+void cleanup_fires(GameState* game);
 void cleanup_audio(GameAudio* audio);
 #endif

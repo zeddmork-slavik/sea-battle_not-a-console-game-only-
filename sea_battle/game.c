@@ -45,9 +45,10 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     event_processing(&game, ctx, landmarks, audio);
     
     if (audio_initialized) {
-        cleanup_audio(audio);
         Mix_CloseAudio();
     }
+    
+    cleanup_game(game);
 }
 
 void event_processing(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks, GameAudio* audio){
@@ -85,7 +86,7 @@ void event_processing(GameState* game, const GraphicsContext* ctx, const GameLan
 
 void compose_frame(GameState* game, double delta_time, Uint32 current_time, const GraphicsContext* ctx, const GameLandmarks* landmarks, GameAudio* audio){
     update_cannon_animation(&game->player_cannon, delta_time);
-    update_cannonball(&game, current_time);
+    update_cannonball(ctx, game, landmarks, current_time, audio);
     if (!game->player_cannon.is_animating && 
         game->player_cannon.animation_end_time != 0) {
         if (current_time - game->player_cannon.animation_end_time >= 
@@ -104,7 +105,7 @@ void compose_frame(GameState* game, double delta_time, Uint32 current_time, cons
             game->player_cannon.current_alpha = STARTING_TRANSPARENCY;  
         }
     }
-    clear_screen(ctx);  // это имя указателя
+    clear_screen(ctx); 
     draw_board(ctx, landmarks->player_x, landmarks->offset_y, 
             game->player_board, SHOW_SHIPS); 
     draw_board(ctx, landmarks->computer_x, landmarks->offset_y, 
@@ -122,8 +123,18 @@ void compose_frame(GameState* game, double delta_time, Uint32 current_time, cons
     }
     else {draw_cannon(ctx, &game->player_cannon, IS_PLAYER, &game->cannonball);
         draw_cannon(ctx, &game->computer_cannon, IS_COMPUTER, &game->cannonball);
+    }
+    if (game->show_spray) {
+        if(current_time < game->spray_end_time) {
+            draw_spray(ctx, game);
+            game->spray_alpha -= SPEED_TRANSPARENCY_BY_FRAME;
+        } else {
+        game->show_spray = 0;
+        game->spray_end_time = 0;
+        game->spray_x = 0;      
+        game->spray_y = 0;
+        }   
     }   
-            
     present_screen(ctx);
 }
 
@@ -225,7 +236,7 @@ void fire_cannonball(Cannonball* ball, const Cannon* cannon, Uint32 current_time
     ball->parabola_height = distance * 0.15f; // 15% от расстояния (регулируй)
 }
 
-void update_cannonball(GameState* game, Uint32 current_time) {
+void update_cannonball(const GraphicsContext* ctx, GameState* game, const GameLandmarks* landmarks, Uint32 current_time, GameAudio* audio) {
     // Выходим если ядро не активно
     if (game->cannonball.is_active) {
         float elapsed = (current_time - game->cannonball.start_time) / (float)game->cannonball.flight_duration;
@@ -241,7 +252,7 @@ void update_cannonball(GameState* game, Uint32 current_time) {
             // 🎯 Используем динамическую высоту параболы:
             game->cannonball.current_y = game->cannonball.start_y + (game->cannonball.target_y - game->cannonball.start_y) * game->cannonball.progress - parabola * game->cannonball.parabola_height;
         } else {
-            process_shot_result(game);
+            process_shot_result(ctx, game, landmarks, current_time, audio);
             reset_cannonball(&game->cannonball); // вместо с выключением is_active обнулим всю структуру
         }
     }
@@ -264,18 +275,28 @@ void reset_cannonball(Cannonball* ball){
     ball->parabola_height = 0;
 }
 
-void process_shot_result(GameState* game){
+void process_shot_result(const GraphicsContext* ctx, GameState* game, const GameLandmarks* landmarks, Uint32 current_time, GameAudio* audio){
+    
+    if(game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] == 0){
+        game->show_spray = 1;
+        game->spray_end_time = current_time + DURATION_OF_SPLASHES; 
+        game->spray_x = (game->current_turn == IS_PLAYER ? landmarks->computer_x: landmarks->player_x) + (int) game->cannonball.target_cell_x * ctx->cell_size;      
+        game->spray_y = landmarks->offset_y + (int) game->cannonball.target_cell_y * ctx->cell_size - Y_CRUTCH_FOR_SPLASHES;
+        game->spray_alpha = STARTING_TRANSPARENCY;
+        play_water_splash(audio);
+    }
     
     if(game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] == 1){
         game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] = 2;
+      // не реализована  add_fire_to_stack(game, cell_x, cell_y);   // добавляем в стек огней
     }
-    else if()
+    /*
     → check_hit_or_miss()
     → update_cell_state() 
     → check_ship_sunk()
     → update_sunk_counter()
 
-
+*/
 }
 
 GameAudio* load_audio() {
@@ -290,8 +311,11 @@ GameAudio* load_audio() {
     if (!audio->victory) {
         printf("Failed to load victory.mp3: %s\n", Mix_GetError());
     }
+    audio->water_splash = Mix_LoadWAV("../sounds/water_splash.mp3");
+    if (!audio->water_splash) {
+        printf("Failed to load water_splash.mp3: %s\n", Mix_GetError());
+    }
     /* Остальные звуки пока заглушки
-    audio->water_splash = NULL;
     audio->ship_hit = NULL;
     audio->background = NULL;*/
     
@@ -304,10 +328,32 @@ void play_cannon_shot(GameAudio* audio) {
     }
 }
 
+void play_water_splash(GameAudio* audio) {
+    if (audio && audio->water_splash) {
+        Mix_PlayChannel(-1, audio->water_splash, 0);// автовыбор потока, ,количество повторений
+    }
+}
+
 void play_victory(GameAudio* audio) {// !!!!!!!!!!!!!!!!!!!!!!!!!  пока никуда не вставляли
     if (audio && audio->victory) {
         Mix_PlayChannel(-1, audio->victory, 0);
     }
+}
+
+void cleanup_game(GameState* game) {
+    // Очищаем ВСЕ динамические ресурсы:
+    cleanup_audio(game->audio);
+    cleanup_fires(game);  // 🆕 очистка списка огней
+}
+
+void cleanup_fires(GameState* game) {
+    FireNode* current = game->active_fires;
+    while (current != NULL) {
+        FireNode* next = current->next;
+        free(current);  // ⭐ ОСВОБОЖДАЕМ КАЖДЫЙ ОГОНЬ
+        current = next;
+    }
+    game->active_fires = NULL;
 }
 
 void cleanup_audio(GameAudio* audio) {

@@ -23,9 +23,11 @@
 #define WIDTH_SPRAY_TEXTURE 50
 #define HEIGHT_SPRAY_TEXTURE 66
 
+typedef struct GameState GameState;
 typedef struct GameBoard GameBoard;
 typedef struct Cannon Cannon;
 typedef struct Cannonball Cannonball;
+typedef struct GameLandmarks GameLandmarks;
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Renderer SDL_Renderer;
 typedef struct SDL_Texture SDL_Texture;
@@ -50,6 +52,14 @@ typedef struct GraphicsContext{ // рендерер, главное окно и 
     SDL_Texture* ship_jup_4p;  // четырехпалубный
     SDL_Texture* player_island_texture;
     SDL_Texture* computer_island_texture; 
+    SDL_Texture* fire_ship1;
+    SDL_Texture* fire_ship2;
+    SDL_Texture* fire_ship3;
+    SDL_Texture* fire_ship4;
+    SDL_Texture* fire_ship5;
+    SDL_Texture* fire_ship6;
+    SDL_Texture* fire_ship7;
+    SDL_Texture* fire_ship8;
     SDL_Texture* spray_texture; // брызги
 } GraphicsContext; 
 
@@ -70,4 +80,5 @@ void draw_island(const GraphicsContext* ctx, int base_x, int base_y, char is_pla
 void draw_cannon(const GraphicsContext* ctx, const Cannon* cannon, char is_player, const Cannonball* cannonball);
 void draw_fire_of_cannon(const GraphicsContext* ctx, const Cannon* cannon, int base_x, int base_y);
 void draw_cannonball(const GraphicsContext* ctx, const Cannonball* core);
+void draw_spray(const GraphicsContext* ctx, GameState* game);
 #endif
