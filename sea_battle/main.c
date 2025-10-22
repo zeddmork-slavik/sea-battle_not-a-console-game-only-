@@ -1,9 +1,10 @@
 #define SDL_MAIN_HANDLED // иначе при компиляции ошибка "undefined reference to `WinMain'"
 #include <SDL2/SDL.h>
+#include <stdio.h>
 #include <time.h>
-#include "graphics.h"
-#include "board.h"
-#include "game.h"
+#include "graphics/graphics_state.h" 
+#include "core/game_state.h"
+#include "core/game_loop.h" 
 
 int main() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) { // подключение модулей SDL можно будет подключить аудио, Video (даёт доступ к SDL_CreateWindow и SDL_Renderer)

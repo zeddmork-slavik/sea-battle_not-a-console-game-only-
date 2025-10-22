@@ -1,43 +1,9 @@
 #include <stdlib.h>
-#include "board.h"
-#include "graphics.h"
+#include <stdio.h> // для отладок
+#include "core/game_state.h" 
+#include "auto.h"
 
-void init_board(GameBoard* board){
-    auto_arrange_ships(board);
 
-}
-
-/*void reset_board(GameBoard* board) {
-    // Обнуляем все клетки поля
-    for (char i = 0; i < GRID_SIZE; i++) {
-        for (char j = 0; j < GRID_SIZE; j++) {
-            board->cells[i][j] = CELL_EMPTY; 
-        }
-    }
-
-    // Обнуляем массив кораблей
-    for (char i = 0; i < MAX_SHIPS; i++) {
-        board->ships[i] = (Ship){0, 0, 0, 0, 0};
-    }
-    
-    board->ship_count = 0; 
-}
-*/
-GameLandmarks calculate_landmarks(const GraphicsContext* ctx){
-    
-    int total_width = 2 * ctx-> field_size + BETWEEN_GRIDS + 2 * EDGE;
-    int start_x = (ctx-> width_of_window - total_width) >> 1;  //просто добавляет лишние пиксили к EDGE  
-    
-    //printf("landmarks total_width = %d, start_x = %d, cell_size = %d ;"
-    //"field_size = %d ; player_x = %d ; computer_x = %d, offset_y = %d", total_width, start_x, 
-    //ctx-> cell_size, ctx-> field_size, start_x + EDGE, start_x + EDGE + ctx->field_size + BETWEEN_GRIDS, ctx->height_of_window - ctx->field_size - EDGE);
-    GameLandmarks landmarks;        
-    landmarks.player_x = start_x + EDGE; 
-    landmarks.computer_x = landmarks.player_x + ctx->field_size + BETWEEN_GRIDS;
-    landmarks.offset_y = ctx->height_of_window - ctx->field_size - EDGE; // 179
-    
-    return landmarks;
-}
 
 void auto_arrange_ships(GameBoard* board){
     
@@ -93,10 +59,6 @@ char place_for_others_decks(const GameBoard* board, char* x, char* y, const char
     if (can_go_up(board, *x, *y))    valid_mask |= (1 << UP);     // включили UP
     if (can_go_down(board, *x, *y))  valid_mask |= (1 << DOWN);   // включили DOWN
 
-    // 3. Проверяем конкретное направление
-    //if (valid_mask & (1 << LEFT)) {
-    //printf("Можно идти влево!\n");
-    //}
     char direction_for_growing = select_random_direction(valid_mask);
 
     if(direction_for_growing != INVALID_DIRECTION){ 
@@ -171,7 +133,6 @@ char check_place_for_first_deck(const GameBoard* board, const char x, const char
         }
     }
 
-    //printf("\nflag %d", flag);
     return flag;
 }
 
@@ -295,5 +256,3 @@ char can_go_down(const GameBoard* board, char x, char y){
     
     return flag; 
 }
-
-
