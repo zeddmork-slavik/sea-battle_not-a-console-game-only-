@@ -1,7 +1,9 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
-#include <SDL2/SDL_mixer.h>
+#include <stdint.h> // для uint32_t
+
+
 
 #define DELAY_FIRE_CANON 500 // 0.5 секунды
 #define PLAYER_CANNON_PIVOT_X 90
@@ -61,11 +63,14 @@
 #define ISLAND_BELOW_PLAYER_CANON 10
 #define IS_PLAYER 1 
 #define IS_COMPUTER 0       // next 4 for init_cannon() on run_game()
+#define TIME_EVERY_SHIPS_FIRE 170
 
 typedef struct GameAudio GameAudio;
 typedef struct SDL_Window SDL_Window;
 typedef struct SDL_Renderer SDL_Renderer;
 typedef struct SDL_Texture SDL_Texture;
+typedef uint32_t Uint32;
+
 
 typedef struct GameLandmarks{ 
     int player_x; 
@@ -91,7 +96,6 @@ typedef enum {
     CELL_SHIP = 1, 
     CELL_FIRE = 2
 } CellState;
-
 
 typedef struct Cannon{ // без имени компилятор ананимусом обзывается
     SDL_Texture* canon_platform_texture;    // неподвижная опора
@@ -124,6 +128,13 @@ typedef struct Cannonball{
     float parabola_height;  // 🆕 высота параболы
 } Cannonball;
 
+typedef struct FireNode {
+    unsigned char cell_x, cell_y;          // координаты клетки
+    unsigned char current_frame;  // текущий кадр анимации (0-7)
+    Uint32 last_frame_time;       // время последней смены кадра
+    struct FireNode* next;        // указатель на следующий огонь
+} FireNode;
+
 typedef struct GameState{
     char running;
     GameBoard* player_board;
@@ -138,6 +149,7 @@ typedef struct GameState{
     int spray_y;
     unsigned char spray_alpha; 
     GameAudio* audio; 
+    FireNode* active_fires;       // 🆕 стек активных огней
 } GameState;
 
 typedef struct GraphicsContext{ // рендерер, главное окно и размер игровой клетки поля в пикселях
@@ -160,7 +172,7 @@ typedef struct GraphicsContext{ // рендерер, главное окно и 
     SDL_Texture* fire_ship5;
     SDL_Texture* fire_ship6;
     SDL_Texture* fire_ship7;
-    SDL_Texture* fire_ship8;
+    SDL_Texture* fire_ship0;
     SDL_Texture* spray_texture; // брызги
 } GraphicsContext; 
 
@@ -172,6 +184,7 @@ GameLandmarks calculate_landmarks(const GraphicsContext* ctx);
 void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, 
     SDL_Renderer* renderer);
 void reset_cannonball(Cannonball* ball);
+void add_fire_to_stack(GameState* game, int cell_x, int cell_y, Uint32 current_time);
 void cleanup_fires(GameState* game);
 void cleanup_game(GameState* game);
 #endif

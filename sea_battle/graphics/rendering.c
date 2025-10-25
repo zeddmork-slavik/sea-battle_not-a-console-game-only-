@@ -7,6 +7,7 @@
 #include "boards.h"
 #include "cannons.h" 
 #include "effects.h"
+#include "ships.h"
 
 void compose_frame(GameState* game, double delta_time, Uint32 current_time, const GraphicsContext* ctx, const GameLandmarks* landmarks, GameAudio* audio){
     update_cannon_animation(&game->player_cannon, delta_time);
@@ -41,6 +42,7 @@ void compose_frame(GameState* game, double delta_time, Uint32 current_time, cons
             OFFSET_X_FROM_BOARD + X_CRUTCH_COMPUTER_ISLAND, 
             landmarks->offset_y + OFFSET_Y_FROM_COMPUTER_CANON + 
             ISLAND_BELOW_PLAYER_CANON + Y_CRUTCH_COMPUTER_ISLAND, IS_COMPUTER);
+    draw_all_fires(ctx, game,landmarks);
     if (game->show_spray) {
         if(current_time < game->spray_end_time) {
             draw_spray(ctx, game);

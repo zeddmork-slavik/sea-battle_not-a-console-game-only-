@@ -100,3 +100,15 @@ void update_cannonball(const GraphicsContext* ctx, GameState* game, const GameLa
         }
     }
 }
+
+void update_fire_animations(GameState* game, Uint32 current_time) {
+    FireNode* current = game->active_fires;
+    while (current != NULL) {
+        // Смена кадра каждые 100ms
+        if (current_time - current->last_frame_time > TIME_EVERY_SHIPS_FIRE) {
+            current->current_frame = (current->current_frame + 1) % 8;
+            current->last_frame_time = current_time;
+        }
+        current = current->next;
+    }
+}
