@@ -60,7 +60,7 @@ void event_processing(GameState* game, const GraphicsContext* ctx, const GameLan
                     }
                 }
             }
-         
+            update_fire_animations(game, current_time);
             compose_frame(game, delta_time, current_time, ctx, landmarks, audio);
         
             SDL_Delay(33); // ~30 FPS для пошаговой игры

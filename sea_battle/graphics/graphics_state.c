@@ -43,6 +43,7 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.ship_jup_2p = load_texture_from_file(renderer, "../images/ship_jup_2p.png");
     ctx.ship_jup_3p = load_texture_from_file(renderer, "../images/ship_jup_3p.png");
     ctx.ship_jup_4p = load_texture_from_file(renderer, "../images/ship_jup_4p.png");
+    ctx.fire_ship0 = load_texture_from_file(renderer, "../images/fire_ship0.png");
     ctx.fire_ship1 = load_texture_from_file(renderer, "../images/fire_ship1.png");
     ctx.fire_ship2 = load_texture_from_file(renderer, "../images/fire_ship2.png");
     ctx.fire_ship3 = load_texture_from_file(renderer, "../images/fire_ship3.png");
@@ -50,7 +51,6 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.fire_ship5 = load_texture_from_file(renderer, "../images/fire_ship5.png");
     ctx.fire_ship6 = load_texture_from_file(renderer, "../images/fire_ship6.png");
     ctx.fire_ship7 = load_texture_from_file(renderer, "../images/fire_ship7.png");
-    ctx.fire_ship8 = load_texture_from_file(renderer, "../images/fire_ship8.png");
     ctx.player_island_texture = load_texture_from_file(renderer, "../images/player_island.png");
     ctx.computer_island_texture = load_texture_from_file(renderer, "../images/computer_island.png");
     ctx.spray_texture = load_texture_from_file(renderer, "../images/spray.png");

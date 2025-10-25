@@ -16,7 +16,7 @@ void process_shot_result(const GraphicsContext* ctx, GameState* game, const Game
     
     if(game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] == 1){
         game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] = 2;
-      // не реализована  add_fire_to_stack(game, cell_x, cell_y);   // добавляем в стек огней
+        add_fire_to_stack(game, game->cannonball.target_cell_x, game->cannonball.target_cell_y, current_time);   
     }
     /*
     → check_hit_or_miss()

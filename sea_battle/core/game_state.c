@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <stdlib.h>
 #include "game_state.h"
 #include "arrangement/auto.h"
 #include "graphics/graphics_state.h"
@@ -63,7 +64,17 @@ void reset_cannonball(Cannonball* ball){
     ball->parabola_height = 0;
 }
 
-/*void cleanup_fires(GameState* game) { // !!!!!!!!!!!!!!!!!!! не реализована
+void add_fire_to_stack(GameState* game, int cell_x, int cell_y, Uint32 current_time){
+    FireNode* new_fire = malloc(sizeof(FireNode));
+    new_fire->cell_x = cell_x;
+    new_fire->cell_y = cell_y;
+    new_fire->current_frame = 1;
+    new_fire->last_frame_time = current_time;
+    new_fire->next = game->active_fires;  // записываем старую вершину
+    game->active_fires = new_fire;
+}
+
+void cleanup_fires(GameState* game) { 
         FireNode* current = game->active_fires;
     while (current != NULL) {
         FireNode* next = current->next;
@@ -71,12 +82,12 @@ void reset_cannonball(Cannonball* ball){
         current = next;
     }
     game->active_fires = NULL;
-}*/
+}
 
 void cleanup_game(GameState* game) {
     // Очищаем ВСЕ динамические ресурсы:
     cleanup_audio(game->audio);
-    //cleanup_fires(game);  // 🆕 очистка списка огней  !!!!!!!!!!!!!!!!!!! no realize !!!!!!!!!!!!!
+    cleanup_fires(game);  // 🆕 очистка списка огней  !!!!!!!!!!!!!!!!!!! no realize !!!!!!!!!!!!!
 }
 
 /*void reset_board(GameBoard* board) {
