@@ -31,6 +31,12 @@ void compose_frame(GameState* game, double delta_time, Uint32 current_time, cons
         }
     }
     clear_screen(ctx); 
+    draw_all_elements(game, current_time, ctx, landmarks);     
+    present_screen(ctx);
+}
+
+void draw_all_elements(GameState* game, Uint32 current_time, const GraphicsContext* ctx, const GameLandmarks* landmarks){
+
     draw_board(ctx, landmarks->player_x, landmarks->offset_y, 
             game->player_board, SHOW_SHIPS); 
     draw_board(ctx, landmarks->computer_x, landmarks->offset_y, 
@@ -61,6 +67,4 @@ void compose_frame(GameState* game, double delta_time, Uint32 current_time, cons
     else {draw_cannon(ctx, &game->player_cannon, IS_PLAYER, &game->cannonball);
         draw_cannon(ctx, &game->computer_cannon, IS_COMPUTER, &game->cannonball);
     }
-     
-    present_screen(ctx);
 }

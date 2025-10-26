@@ -38,9 +38,14 @@ GameAudio* load_audio() {
     if (!audio->water_splash) {
         printf("Failed to load water_splash.mp3: %s\n", Mix_GetError());
     }
-    /* Остальные звуки пока заглушки
-    audio->ship_hit = NULL;
-    audio->background = NULL;*/
+    audio->ship_hit = Mix_LoadWAV("../sounds/ship_hit.mp3");
+    if (!audio->ship_hit) {
+        printf("Failed to load ship_hit.mp3: %s\n", Mix_GetError());
+    }
+    audio->background = Mix_LoadMUS("../sounds/background.mp3");
+    if (!audio->background) {
+        printf("Failed to load background.mp3: %s\n", Mix_GetError());
+    }
     
     return audio;
 }
@@ -53,15 +58,27 @@ void play_cannon_shot(GameAudio* audio) {
 
 void play_water_splash(GameAudio* audio) {
     if (audio && audio->water_splash) {
-        Mix_PlayChannel(-1, audio->water_splash, 0);// автовыбор потока, ,количество повторений
+        Mix_PlayChannel(-1, audio->water_splash, 0);
     }
 }
 
-void play_victory(GameAudio* audio) {// !!!!!!!!!!!!!!!!!!!!!!!!!  пока никуда не вставляли
+void play_ship_hit(GameAudio* audio) {
+    if (audio && audio->ship_hit) {
+        Mix_PlayChannel(-1, audio->ship_hit, 0);
+    }
+}
+
+void play_background(GameAudio* audio) {
+    if (audio && audio->background) {
+        Mix_PlayMusic(audio->background, -1);
+    }
+}
+
+/*void play_victory(GameAudio* audio) {// !!!!!!!!!!!!!!!!!!!!!!!!!  пока никуда не вставляли
     if (audio && audio->victory) {
         Mix_PlayChannel(-1, audio->victory, 0);
     }
-}
+}*/
 
 void cleanup_audio(GameAudio* audio) {
     if (audio->audio_initialized) {

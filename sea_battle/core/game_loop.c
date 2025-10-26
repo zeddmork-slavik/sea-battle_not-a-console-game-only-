@@ -28,6 +28,8 @@ void run_game(const GraphicsContext* ctx, const GameLandmarks* landmarks) { //з
     game.cannonball.rotation_speed = 720.0;    // 720°/секунду = 2 оборота в секунду
     
     game.audio = audio_initialization();
+
+    play_background(game.audio);
     
     event_processing(&game, ctx, landmarks, game.audio);
     
