@@ -64,6 +64,8 @@
 #define IS_PLAYER 1
 #define IS_COMPUTER 0  // next 4 for init_cannon() on run_game()
 #define TIME_EVERY_SHIPS_FIRE 170
+#define STATE_MENU 0
+#define STATE_PLAYING 1
 
 typedef struct GameAudio GameAudio;
 typedef struct SDL_Window SDL_Window;
@@ -144,7 +146,9 @@ typedef struct GameState {
     int spray_y;
     unsigned char spray_alpha;
     GameAudio* audio;
-    FireNode* active_fires;  // 🆕 стек активных огней
+    FireNode* active_fires;        // 🆕 стек активных огней
+    unsigned char game_state;      // 🆕 STATE_MENU или STATE_PLAYING
+    unsigned char menu_selection;  // 🆕 0="Новая игра", 1="Выход"
 } GameState;
 
 typedef struct GraphicsContext {  // рендерер, главное окно и размер игровой клетки поля в пикселях
