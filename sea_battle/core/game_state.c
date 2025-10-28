@@ -1,11 +1,27 @@
 #include "game_state.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 
 #include "arrangement/auto.h"
 #include "audio.h"
 #include "graphics/graphics_state.h"
+
+int initialize_sdl_systems(void) {
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {  // подключение модулей SDL можно будет подключить аудио, Video (даёт
+                                         // доступ к SDL_CreateWindow и SDL_Renderer)
+        printf("SDL Error: %s\n", SDL_GetError());  // при ошибке SDL_Init возвращает отрицательное число
+        return 1;  // SDL_GetError - функция для получения текстового человекочитаемого описания ошибки
+    }
+    if (TTF_Init() < 0) {
+        printf("TTF Error: %s\n", TTF_GetError());
+        SDL_Quit();
+        return 0;
+    }
+
+    return 1;
+}
 
 void init_board(GameBoard* board) { auto_arrange_ships(board); }
 
@@ -103,3 +119,9 @@ void cleanup_game(GameState* game) {
     board->ship_count = 0;
 }
 */
+
+void shutdown_sdl_systems(void) {
+    TTF_Quit();
+    SDL_Quit();  // освобождает только СИСТЕМНЫЕ ресурсы: инициализированные модули но не наши созданные
+                 // объекты
+}

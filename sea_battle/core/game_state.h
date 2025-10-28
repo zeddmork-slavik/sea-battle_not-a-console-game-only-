@@ -1,6 +1,8 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdint.h>  // для uint32_t
 
 #define DELAY_FIRE_CANON 500  // 0.5 секунды
@@ -172,9 +174,11 @@ typedef struct GraphicsContext {  // рендерер, главное окно �
     SDL_Texture* fire_ship6;
     SDL_Texture* fire_ship7;
     SDL_Texture* fire_ship0;
-    SDL_Texture* spray_texture;  // брызги
+    SDL_Texture* spray_texture;
+    TTF_Font* menu_font;
 } GraphicsContext;
 
+int initialize_sdl_systems(void);
 void init_board(GameBoard* board);
 GameLandmarks calculate_landmarks(const GraphicsContext* ctx);
 void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, SDL_Renderer* renderer);
@@ -182,4 +186,5 @@ void reset_cannonball(Cannonball* ball);
 void add_fire_to_stack(GameState* game, int cell_x, int cell_y, Uint32 current_time);
 void cleanup_fires(GameState* game);
 void cleanup_game(GameState* game);
+void shutdown_sdl_systems(void);
 #endif

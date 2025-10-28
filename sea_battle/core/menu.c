@@ -1,6 +1,7 @@
 #include "menu.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "game_state.h"
 
@@ -38,30 +39,45 @@ void render_main_menu(const GraphicsContext* ctx, const GameState* game) {
     SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255);
     SDL_RenderClear(ctx->renderer);
 
-    // Белый цвет для текста
-    SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 255);
+    SDL_Color white = {255, 255, 255, 255};
+    SDL_Color yellow = {255, 255, 0, 255};
+    SDL_Color gray = {128, 128, 128, 255};
 
-    // Заголовок (прямоугольник)
-    SDL_Rect title_rect = {ctx->width_of_window / 2 - 150, 100, 300, 60};
-    SDL_RenderDrawRect(ctx->renderer, &title_rect);
+    // ЗАГОЛОВОК
+    render_text(ctx, "SEA BATTLE", ctx->width_of_window / 2 - 80, 120, white);
 
-    // Кнопка "Новая игра"
-    SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 255);
-    if (game->menu_selection == 0) {
-        SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 0, 255);  // Желтый если выбрана
-    }
-    SDL_Rect new_game_rect = {ctx->width_of_window / 2 - 100, 250, 200, 40};
+    // КНОПКА "НОВАЯ ИГРА"
+    SDL_Color new_game_color = (game->menu_selection == 0) ? yellow : white;
+    SDL_Rect new_game_rect = {ctx->width_of_window / 2 - 125, 250, 225, 40};
+    SDL_SetRenderDrawColor(ctx->renderer, new_game_color.r, new_game_color.g, new_game_color.b, 255);
     SDL_RenderDrawRect(ctx->renderer, &new_game_rect);
+    render_text(ctx, "NEW GAME", ctx->width_of_window / 2 - 125, 250, new_game_color);
 
-    // Кнопка "Выход"
-    SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 255, 255);
-    if (game->menu_selection == 1) {
-        SDL_SetRenderDrawColor(ctx->renderer, 255, 255, 0, 255);  // Желтый если выбрана
-    }
-    SDL_Rect exit_rect = {ctx->width_of_window / 2 - 100, 310, 200, 40};
+    // КНОПКА "ВЫХОД"
+    SDL_Color exit_color = (game->menu_selection == 1) ? yellow : white;
+    SDL_Rect exit_rect = {ctx->width_of_window / 2 - 60, 310, 130, 40};
+    SDL_SetRenderDrawColor(ctx->renderer, exit_color.r, exit_color.g, exit_color.b, 255);
     SDL_RenderDrawRect(ctx->renderer, &exit_rect);
+    render_text(ctx, "EXIT", ctx->width_of_window / 2 - 50, 310, exit_color);
 
+    // ПОДСКАЗКА
+    render_text(ctx, "Use arrows and Enter", ctx->width_of_window / 2 - 120, 400, gray);
     SDL_RenderPresent(ctx->renderer);  // ⭐ ПОКАЗАТЬ НА ЭКРАНЕ!
+}
+
+void render_text(const GraphicsContext* ctx, const char* text, int x, int y, SDL_Color color) {
+    if (!ctx->menu_font) return;
+
+    SDL_Surface* surface = TTF_RenderText_Solid(ctx->menu_font, text, color);
+    if (surface) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(ctx->renderer, surface);
+        if (texture) {
+            SDL_Rect rect = {x, y, surface->w, surface->h};
+            SDL_RenderCopy(ctx->renderer, texture, NULL, &rect);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
 }
 
 void reset_game_for_new_match(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks) {
