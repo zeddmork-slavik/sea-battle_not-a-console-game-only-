@@ -5,7 +5,7 @@
 
 #include "game_state.h"
 
-void handle_menu_input(GameState* game, SDL_Event* event) {
+void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext* ctx) {
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.sym) {
             case SDLK_UP:
@@ -13,7 +13,7 @@ void handle_menu_input(GameState* game, SDL_Event* event) {
                 game->menu_selection = 1 - game->menu_selection;
                 break;
 
-            case SDLK_RETURN:  // 13
+            case SDLK_RETURN:  // enter
                 if (game->menu_selection == 0) {
                     game->game_state = STATE_PLAYING;
                 } else {
@@ -24,11 +24,19 @@ void handle_menu_input(GameState* game, SDL_Event* event) {
     }
 
     if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
+        int mouse_x = event->button.x;  // 🆕 получаем X координату
         int mouse_y = event->button.y;
 
-        if (mouse_y >= 250 && mouse_y <= 290) {
+        // 🆕 Проверяем попадание в прямоугольник "Новая игра"
+        if (mouse_x >= ctx->width_of_window / 2 - 100 &&  // левая граница
+            mouse_x <= ctx->width_of_window / 2 + 100 &&  // правая граница
+            mouse_y >= 250 &&                             // верхняя граница
+            mouse_y <= 290) {                             // нижняя граница
             game->game_state = STATE_PLAYING;
-        } else if (mouse_y >= 310 && mouse_y <= 350) {
+        }
+        // 🆕 Проверяем попадание в прямоугольник "Выход"
+        else if (mouse_x >= ctx->width_of_window / 2 - 100 && mouse_x <= ctx->width_of_window / 2 + 100 &&
+                 mouse_y >= 310 && mouse_y <= 350) {
             game->running = DONT_RUNNING;
         }
     }
@@ -50,7 +58,7 @@ void render_main_menu(const GraphicsContext* ctx, const GameState* game) {
     SDL_Color new_game_color = (game->menu_selection == 0) ? yellow : white;
     SDL_Rect new_game_rect = {ctx->width_of_window / 2 - 125, 250, 225, 40};
     SDL_SetRenderDrawColor(ctx->renderer, new_game_color.r, new_game_color.g, new_game_color.b, 255);
-    SDL_RenderDrawRect(ctx->renderer, &new_game_rect);
+    SDL_RenderDrawRect(ctx->renderer, &new_game_rect);  // рисование прямоугольника по границам поля
     render_text(ctx, "NEW GAME", ctx->width_of_window / 2 - 125, 250, new_game_color);
 
     // КНОПКА "ВЫХОД"

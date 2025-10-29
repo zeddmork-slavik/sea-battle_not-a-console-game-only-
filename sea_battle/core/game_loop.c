@@ -51,8 +51,11 @@ void event_processing(GameState* game, const GraphicsContext* ctx, const GameLan
                 game->running = DONT_RUNNING;
             }
             if (game->game_state == STATE_MENU) {
-                handle_menu_input(game, &event);
-            } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                handle_menu_input(game, &event, ctx);
+            } else if (event.type == SDL_MOUSEBUTTONDOWN &&
+                       event.button.button ==
+                           SDL_BUTTON_LEFT) {  // так то здесь дублирование с предыдущей функцией - надо будет
+                                               // когда-нибудь подумать
                 int mouse_x = event.button.x;
                 int mouse_y = event.button.y;
 
