@@ -54,10 +54,16 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     ctx.player_island_texture = load_texture_from_file(renderer, "../images/player_island.png");
     ctx.computer_island_texture = load_texture_from_file(renderer, "../images/computer_island.png");
     ctx.spray_texture = load_texture_from_file(renderer, "../images/spray.png");
-    ctx.menu_font = TTF_OpenFont("../fonts//MATURASC.TTF", 28);  // 28 размер для красивого скрипта
-    if (!ctx.menu_font) {
+    ctx.menu_small_font = TTF_OpenFont("../fonts//MATURASC.TTF", 28);  // 28 размер для красивого скрипта
+    if (!ctx.menu_small_font) {
         printf("Failed to load font: %s\n", TTF_GetError());
     }
+    ctx.menu_big_font = TTF_OpenFont("../fonts//MATURASC.TTF", 42);
+    if (!ctx.menu_big_font) {
+        printf("Failed to load font: %s\n", TTF_GetError());
+    }
+    ctx.menu_bg = load_texture_from_file(renderer, "../images/menu_bg.jpg");
+
     return ctx;
 }
 

@@ -175,7 +175,9 @@ typedef struct GraphicsContext {  // рендерер, главное окно �
     SDL_Texture* fire_ship7;
     SDL_Texture* fire_ship0;
     SDL_Texture* spray_texture;
-    TTF_Font* menu_font;
+    TTF_Font* menu_small_font;
+    TTF_Font* menu_big_font;
+    SDL_Texture* menu_bg;
 } GraphicsContext;
 
 int initialize_sdl_systems(void);
