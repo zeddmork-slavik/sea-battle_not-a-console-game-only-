@@ -5,6 +5,7 @@
 
 #include "game_state.h"
 #include "graphics/effects.h"
+#include "graphics/ships.h"
 
 void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext* ctx) {
     if (event->type == SDL_KEYDOWN) {
@@ -58,8 +59,30 @@ void render_main_menu(const GraphicsContext* ctx, const GameState* game) {
     SDL_Color new_game_color = (game->menu_selection == 0) ? yellow : white;
     SDL_Rect new_game_rect = {0, 0, 370, 74};
     SDL_SetRenderDrawColor(ctx->renderer, new_game_color.r, new_game_color.g, new_game_color.b, 255);
-    SDL_RenderDrawRect(ctx->renderer, &new_game_rect);  // рисование прямоугольника по границам поля
-    render_text(ctx, "NEW GAME", 10, 10, new_game_color, 2);
+    if (game->menu_selection == 0) {
+        SDL_RenderDrawRect(ctx->renderer, &new_game_rect);
+    }  // рисование прямоугольника по границам поля
+    render_text(ctx, "START GAME", 10, 10, new_game_color, 2);
+
+    // 🎯 КАЖДАЯ БУКВА СВОИМИ КООРДИНАТАМИ
+    SDL_Rect p_rect = {45, 65, 14, 38};   // Буква 'p'
+    SDL_Rect l_rect = {45, 94, 14, 38};   // Буква 'l' - ниже на 40px
+    SDL_Rect a_rect = {45, 109, 14, 38};  // Буква 'a' - ниже на 75px
+    SDL_Rect n_rect = {45, 126, 14, 38};  // Буква 'n' - ниже на 110px
+
+    SDL_Rect y_rect = {345, 74, 14, 38};   // Буква 'p'
+    SDL_Rect e_rect = {345, 101, 14, 38};  // Буква 'l' - ниже на 40px
+    SDL_Rect t_rect = {345, 126, 14, 38};
+    // Рисуем каждую букву отдельно
+    render_single_char(ctx, 'p', p_rect.x, p_rect.y, white);
+    render_single_char(ctx, 'l', l_rect.x, l_rect.y, white);
+    render_single_char(ctx, 'a', a_rect.x, a_rect.y, white);
+    render_single_char(ctx, 'n', n_rect.x, n_rect.y, white);
+    render_single_char(ctx, 'y', y_rect.x, y_rect.y, white);
+    render_single_char(ctx, 'e', e_rect.x, e_rect.y, white);
+    render_single_char(ctx, 't', t_rect.x, t_rect.y, white);
+
+    draw_ship(ctx, 100, 170, 0, 0, 0, 4, ctx->ship_jup_4p);
 
     // КНОПКА "ВЫХОД"
     SDL_Color exit_color = (game->menu_selection == 1) ? yellow : white;
@@ -84,6 +107,23 @@ void render_text(const GraphicsContext* ctx, const char* text, int x, int y, SDL
         if (texture) {
             SDL_Rect rect = {x, y, surface->w, surface->h};
             SDL_RenderCopy(ctx->renderer, texture, NULL, &rect);  // типа внести на холст но нужно подумать
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+}
+
+void render_single_char(const GraphicsContext* ctx, char ch, int x, int y, SDL_Color color) {
+    if (!ctx->menu_small_font) return;
+
+    char single_char[2] = {ch, '\0'};
+    SDL_Surface* surface = TTF_RenderText_Blended(ctx->menu_small_font, single_char, color);
+
+    if (surface) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(ctx->renderer, surface);
+        if (texture) {
+            SDL_Rect rect = {x, y, surface->w, surface->h};
+            SDL_RenderCopy(ctx->renderer, texture, NULL, &rect);
             SDL_DestroyTexture(texture);
         }
         SDL_FreeSurface(surface);

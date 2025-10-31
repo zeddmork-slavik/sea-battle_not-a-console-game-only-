@@ -12,6 +12,7 @@ typedef union SDL_Event SDL_Event;
 void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext* ctx);
 void render_main_menu(const GraphicsContext* ctx, const GameState* game);
 void render_text(const GraphicsContext* ctx, const char* text, int x, int y, SDL_Color color, int size);
+void render_single_char(const GraphicsContext* ctx, char ch, int x, int y, SDL_Color color);
 void render_text_with_shadow(const GraphicsContext* ctx, const char* text, int x, int y,
                              SDL_Color text_color);
 void reset_game_for_new_match(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks);

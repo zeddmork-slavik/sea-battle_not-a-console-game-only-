@@ -58,7 +58,7 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
     if (!ctx.menu_small_font) {
         printf("Failed to load font: %s\n", TTF_GetError());
     }
-    ctx.menu_big_font = TTF_OpenFont("../fonts//MATURASC.TTF", 42);
+    ctx.menu_big_font = TTF_OpenFont("../fonts//MATURASC.TTF", 36);
     if (!ctx.menu_big_font) {
         printf("Failed to load font: %s\n", TTF_GetError());
     }
