@@ -10,7 +10,6 @@
 #define PLAYER_CANNON_PIVOT_Y 55
 #define COMPUTER_CANNON_PIVOT_X 105
 #define COMPUTER_CANNON_PIVOT_Y 43
-#define STARTING_TRANSPARENCY 255  // совсем не прозрачная
 #define BARREL_OR_CORE_ROTATION_SPEED_SECOND_PER_FRAME 0.033
 #define ANGLE_BETWEEN_DIRECTION_PLAYER_BARREL_AND_ITS_TEXTURE -7.0
 #define PLAYER_BARREL_LENGTH 82
@@ -148,9 +147,11 @@ typedef struct GameState {
     int spray_y;
     unsigned char spray_alpha;
     GameAudio* audio;
-    FireNode* active_fires;        // 🆕 стек активных огней
-    unsigned char game_state;      // 🆕 STATE_MENU или STATE_PLAYING
-    unsigned char menu_selection;  // 🆕 0="Новая игра", 1="Выход"
+    FireNode* active_fires;  // 🆕 стек активных огней
+    char background_music_on;
+    char all_sound_on;
+    unsigned char game_state;  // 🆕 STATE_MENU или STATE_PLAYING
+    unsigned char menu_selection;
 } GameState;
 
 typedef struct GraphicsContext {  // рендерер, главное окно и размер игровой клетки поля в пикселях
@@ -178,6 +179,8 @@ typedef struct GraphicsContext {  // рендерер, главное окно �
     TTF_Font* menu_small_font;
     TTF_Font* menu_big_font;
     SDL_Texture* menu_bg;
+    SDL_Texture* button_on;
+    SDL_Texture* button_off;
 } GraphicsContext;
 
 int initialize_sdl_systems(void);

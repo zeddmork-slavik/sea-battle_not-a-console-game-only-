@@ -13,6 +13,8 @@ void run_game(const GraphicsContext* ctx,
               const GameLandmarks* landmarks) {  // зарефакторить её нужно будет скоро
     GameState game = {0};  // не трогать: убираю в инициализации поля в которых нужны нули
     game.running = GAME_RUNNING;
+    game.background_music_on = 1;
+    game.all_sound_on = 1;
     game.current_turn = IS_PLAYER;  // поменяю как у компа будет ИИ
     GameBoard player_board_obj = {0};
     GameBoard computer_board_obj = {0};
@@ -51,7 +53,7 @@ void event_processing(GameState* game, const GraphicsContext* ctx, const GameLan
                 game->running = DONT_RUNNING;
             }
             if (game->game_state == STATE_MENU) {
-                handle_menu_input(game, &event, ctx);
+                handle_menu_input(game, &event, ctx, audio);
             } else if (event.type == SDL_MOUSEBUTTONDOWN &&
                        event.button.button ==
                            SDL_BUTTON_LEFT) {  // так то здесь дублирование с предыдущей функцией - надо будет
@@ -67,7 +69,7 @@ void event_processing(GameState* game, const GraphicsContext* ctx, const GameLan
             }
         }
         if (game->game_state == STATE_MENU) {
-            render_main_menu(ctx, game);
+            render_main_menu(ctx, game, audio);
         } else {
             update_fire_animations(game, current_time);
             compose_frame(game, delta_time, current_time, ctx, landmarks, audio);

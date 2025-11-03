@@ -7,44 +7,55 @@
 #include "graphics/effects.h"
 #include "graphics/ships.h"
 
-void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext* ctx) {
+void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext* ctx, GameAudio* audio) {
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.sym) {
             case SDLK_UP:
-            case SDLK_DOWN:
-                game->menu_selection = 1 - game->menu_selection;
-                break;
-
-            case SDLK_RETURN:  // enter
-                if (game->menu_selection == 0) {
-                    game->game_state = STATE_PLAYING;
+                if (game->menu_selection > 0) {
+                    game->menu_selection--;
                 } else {
-                    game->running = DONT_RUNNING;
+                    game->menu_selection = 3;  // 🎯 переходим на последнюю кнопку
+                }
+                break;
+            case SDLK_DOWN:
+                if (game->menu_selection < 3) {
+                    game->menu_selection++;
+                } else {
+                    game->menu_selection = 0;  // 🎯 переходим на первую кнопку
+                }
+                break;
+            case SDLK_RETURN:  // enter
+                switch (game->menu_selection) {
+                    case 0:
+                        game->game_state = STATE_PLAYING;  // "START GAME"
+                        break;
+                    case 1:
+                        // Действие для кнопки 2
+                        break;
+                    case 2:
+                        // Действие для кнопки 3
+                        break;
+                    case 3:
+                        game->running = DONT_RUNNING;  // "EXIT"
+                        break;
                 }
                 break;
         }
-    }
 
-    if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
-        int mouse_x = event->button.x;  // 🆕 получаем X координату
-        int mouse_y = event->button.y;
+        if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
+            int mouse_x = event->button.x;  // 🆕 получаем X координату
+            int mouse_y = event->button.y;
 
-        // 🆕 Проверяем попадание в прямоугольник "Новая игра"
-        if (mouse_x >= ctx->width_of_window / 2 - 100 &&  // левая граница
-            mouse_x <= ctx->width_of_window / 2 + 100 &&  // правая граница
-            mouse_y >= 250 &&                             // верхняя граница
-            mouse_y <= 290) {                             // нижняя граница
-            game->game_state = STATE_PLAYING;
-        }
-        // 🆕 Проверяем попадание в прямоугольник "Выход"
-        else if (mouse_x >= ctx->width_of_window / 2 - 100 && mouse_x <= ctx->width_of_window / 2 + 100 &&
-                 mouse_y >= 310 && mouse_y <= 350) {
-            game->running = DONT_RUNNING;
+            if (mouse_x >= 0 && mouse_x <= 170 && mouse_y >= 0 && mouse_y <= 60) {
+                game->game_state = STATE_PLAYING;
+            } else if (mouse_x >= 125 && mouse_x <= 255 && mouse_y >= 650 && mouse_y <= 690) {
+                game->running = DONT_RUNNING;
+            }
         }
     }
 }
 
-void render_main_menu(const GraphicsContext* ctx, const GameState* game) {
+void render_main_menu(const GraphicsContext* ctx, const GameState* game, GameAudio* audio) {
     // Черный фон
     SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255);
     SDL_RenderClear(ctx->renderer);
@@ -59,21 +70,35 @@ void render_main_menu(const GraphicsContext* ctx, const GameState* game) {
     SDL_Color new_game_color = (game->menu_selection == 0) ? yellow : white;
     SDL_Rect new_game_rect = {0, 0, 370, 74};
     SDL_SetRenderDrawColor(ctx->renderer, new_game_color.r, new_game_color.g, new_game_color.b, 255);
-    if (game->menu_selection == 0) {
-        SDL_RenderDrawRect(ctx->renderer, &new_game_rect);
-    }  // рисование прямоугольника по границам поля
     render_text(ctx, "START GAME", 10, 10, new_game_color, 2);
 
-    // 🎯 КАЖДАЯ БУКВА СВОИМИ КООРДИНАТАМИ
-    SDL_Rect p_rect = {45, 65, 14, 38};   // Буква 'p'
-    SDL_Rect l_rect = {45, 94, 14, 38};   // Буква 'l' - ниже на 40px
-    SDL_Rect a_rect = {45, 109, 14, 38};  // Буква 'a' - ниже на 75px
-    SDL_Rect n_rect = {45, 126, 14, 38};  // Буква 'n' - ниже на 110px
+    form_vertical_text(ctx, white);
 
-    SDL_Rect y_rect = {345, 74, 14, 38};   // Буква 'p'
-    SDL_Rect e_rect = {345, 101, 14, 38};  // Буква 'l' - ниже на 40px
+    draw_ship(ctx, 100, 170, 0, 0, 0, 4, ctx->ship_jup_4p);
+    draw_ship(ctx, 158, 250, 0, 0, 0, 3, ctx->ship_jup_3p);
+    draw_ship(ctx, 212, 330, 0, 0, 0, 2, ctx->ship_jup_2p);
+    draw_ship(ctx, 265, 410, 0, 0, 0, 1, ctx->ship_jup_1p);
+
+    create_sound_control(ctx, game, white, yellow);
+
+    SDL_Color exit_color = (game->menu_selection == 3) ? yellow : white;
+    SDL_Rect exit_rect = {125, 650, 130, 40};
+    SDL_SetRenderDrawColor(ctx->renderer, exit_color.r, exit_color.g, exit_color.b, 255);
+    render_text(ctx, "EXIT", 125, 650, exit_color, 1);
+
+    SDL_RenderPresent(ctx->renderer);
+}
+
+void form_vertical_text(const GraphicsContext* ctx, SDL_Color white) {
+    SDL_Rect p_rect = {45, 65, 14, 38};
+    SDL_Rect l_rect = {45, 94, 14, 38};
+    SDL_Rect a_rect = {45, 109, 14, 38};
+    SDL_Rect n_rect = {45, 126, 14, 38};
+
+    SDL_Rect y_rect = {345, 74, 14, 38};
+    SDL_Rect e_rect = {345, 101, 14, 38};
     SDL_Rect t_rect = {345, 126, 14, 38};
-    // Рисуем каждую букву отдельно
+
     render_single_char(ctx, 'p', p_rect.x, p_rect.y, white);
     render_single_char(ctx, 'l', l_rect.x, l_rect.y, white);
     render_single_char(ctx, 'a', a_rect.x, a_rect.y, white);
@@ -81,19 +106,6 @@ void render_main_menu(const GraphicsContext* ctx, const GameState* game) {
     render_single_char(ctx, 'y', y_rect.x, y_rect.y, white);
     render_single_char(ctx, 'e', e_rect.x, e_rect.y, white);
     render_single_char(ctx, 't', t_rect.x, t_rect.y, white);
-
-    draw_ship(ctx, 100, 170, 0, 0, 0, 4, ctx->ship_jup_4p);
-
-    // КНОПКА "ВЫХОД"
-    SDL_Color exit_color = (game->menu_selection == 1) ? yellow : white;
-    SDL_Rect exit_rect = {ctx->width_of_window / 2 - 60, 310, 130, 40};
-    SDL_SetRenderDrawColor(ctx->renderer, exit_color.r, exit_color.g, exit_color.b, 255);
-    SDL_RenderDrawRect(ctx->renderer, &exit_rect);
-    render_text(ctx, "EXIT", ctx->width_of_window / 2 - 50, 310, exit_color, 1);
-
-    // ПОДСКАЗКА
-    render_text_with_shadow(ctx, "Use arrows and Enter", ctx->width_of_window / 2 - 120, 400, gray);
-    SDL_RenderPresent(ctx->renderer);  // ⭐ ПОКАЗАТЬ НА ЭКРАНЕ!
 }
 
 void render_text(const GraphicsContext* ctx, const char* text, int x, int y, SDL_Color color, int size) {
@@ -106,7 +118,8 @@ void render_text(const GraphicsContext* ctx, const char* text, int x, int y, SDL
             SDL_CreateTextureFromSurface(ctx->renderer, surface);  // передать текстуру видюхе
         if (texture) {
             SDL_Rect rect = {x, y, surface->w, surface->h};
-            SDL_RenderCopy(ctx->renderer, texture, NULL, &rect);  // типа внести на холст но нужно подумать
+            SDL_RenderCopy(ctx->renderer, texture, NULL,
+                           &rect);  // типа внести на холст но нужно подумать
             SDL_DestroyTexture(texture);
         }
         SDL_FreeSurface(surface);
@@ -149,6 +162,24 @@ void render_text_with_shadow(const GraphicsContext* ctx, const char* text, int x
 
     // Основной текст
     render_text(ctx, text, x, y, text_color, 1);
+}
+
+void create_sound_control(const GraphicsContext* ctx, const GameState* game, SDL_Color white,
+                          SDL_Color yellow) {
+    SDL_SetRenderDrawColor(ctx->renderer, white.r, white.g, white.b, 255);
+    render_text(ctx, "song of the sea", 25, 500, white, 1);
+
+    SDL_Rect place_for_backgroun_buttom;
+    place_for_backgroun_buttom = (SDL_Rect){.x = 229, .y = 490, .w = 99, .h = 64};
+    if (game->menu_selection == 1) {
+        SDL_SetRenderDrawColor(ctx->renderer, yellow.r, yellow.g, yellow.b, 255);
+        SDL_RenderDrawRect(ctx->renderer, &place_for_backgroun_buttom);
+    }
+    SDL_RenderCopy(ctx->renderer, ctx->button_on, NULL, &place_for_backgroun_buttom);
+
+    SDL_Rect place_for_all_sound_buttom;
+    place_for_all_sound_buttom = (SDL_Rect){.x = 229, .y = 574, .w = 99, .h = 64};
+    SDL_RenderCopy(ctx->renderer, ctx->button_on, NULL, &place_for_all_sound_buttom);
 }
 
 void reset_game_for_new_match(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks) {

@@ -63,6 +63,8 @@ GraphicsContext create_graphics_context(SDL_Window* window, SDL_Renderer* render
         printf("Failed to load font: %s\n", TTF_GetError());
     }
     ctx.menu_bg = load_texture_from_file(renderer, "../images/menu_bg.jpg");
+    ctx.button_on = load_texture_from_file(renderer, "../images/ON.png");
+    ctx.button_off = load_texture_from_file(renderer, "../images/OFF.png");
 
     return ctx;
 }
