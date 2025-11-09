@@ -1,0 +1,29 @@
+﻿# Executable files
+*.exe
+*.o
+*.out
+
+# Object files
+*.obj
+
+# Libraries
+*.a
+*.lib
+*.dll
+
+# Debug files
+*.pdb
+*.idb
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*~
+*.bak
+
+# Build directories
+build/
+dist/
+bin/
