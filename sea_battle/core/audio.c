@@ -1,21 +1,22 @@
-#include <SDL2/SDL_mixer.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "audio.h"
+
+#include <SDL2/SDL_mixer.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "game_state.h"
 
-GameAudio* audio_initialization(){
-
+GameAudio* audio_initialization() {
     GameAudio* audio = NULL;
-    
+
     // Инициализация аудиосистемы
-    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) == 0) {
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) == 0) {
         audio = load_audio();
         if (audio) {
             audio->audio_initialized = 1;
         }
     }
-    
+
     if (!audio->audio_initialized) {
         printf("Audio system unavailable - continuing without sound\n");
     }
@@ -25,7 +26,7 @@ GameAudio* audio_initialization(){
 GameAudio* load_audio() {
     GameAudio* audio = malloc(sizeof(GameAudio));
     if (!audio) return NULL;
-    
+
     audio->cannon_shot = Mix_LoadWAV("../sounds/cannon_shot.mp3");
     if (!audio->cannon_shot) {
         printf("Failed to load cannon_shot.mp3: %s\n", Mix_GetError());
@@ -46,13 +47,13 @@ GameAudio* load_audio() {
     if (!audio->background) {
         printf("Failed to load background.mp3: %s\n", Mix_GetError());
     }
-    
+
     return audio;
 }
 
 void play_cannon_shot(GameAudio* audio) {
     if (audio && audio->cannon_shot) {
-        Mix_PlayChannel(-1, audio->cannon_shot, 0);// автовыбор потока, ,количество повторений
+        Mix_PlayChannel(-1, audio->cannon_shot, 0);  // автовыбор потока, ,количество повторений
     }
 }
 
@@ -74,6 +75,10 @@ void play_background(GameAudio* audio) {
     }
 }
 
+void fade_out_background_music(int fade_time_ms) {
+    Mix_FadeOutMusic(fade_time_ms);  // 🎚️ Плавное затухание (например 500ms)
+}
+
 /*void play_victory(GameAudio* audio) {// !!!!!!!!!!!!!!!!!!!!!!!!!  пока никуда не вставляли
     if (audio && audio->victory) {
         Mix_PlayChannel(-1, audio->victory, 0);
@@ -84,6 +89,6 @@ void cleanup_audio(GameAudio* audio) {
     if (audio->audio_initialized) {
         Mix_CloseAudio();  // 🆕 закрываем аудиосистему
     }
-    Mix_FreeChunk(audio->cannon_shot); 
+    Mix_FreeChunk(audio->cannon_shot);
     free(audio);
 }

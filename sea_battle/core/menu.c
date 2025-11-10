@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+#include "audio.h"
 #include "game_state.h"
 #include "graphics/effects.h"
 #include "graphics/ships.h"
@@ -14,14 +15,14 @@ void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext*
                 if (game->menu_selection > 0) {
                     game->menu_selection--;
                 } else {
-                    game->menu_selection = 3;  // 🎯 переходим на последнюю кнопку
+                    game->menu_selection = 3;
                 }
                 break;
             case SDLK_DOWN:
                 if (game->menu_selection < 3) {
                     game->menu_selection++;
                 } else {
-                    game->menu_selection = 0;  // 🎯 переходим на первую кнопку
+                    game->menu_selection = 0;
                 }
                 break;
             case SDLK_RETURN:  // enter
@@ -30,10 +31,23 @@ void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext*
                         game->game_state = STATE_PLAYING;  // "START GAME"
                         break;
                     case 1:
-                        // Действие для кнопки 2
+                        if (game->background_music_on) {
+                            fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
+                            game->background_music_on = false;
+                        } else {
+                            play_background(audio);
+                            game->background_music_on = true;
+                        }
                         break;
                     case 2:
-                        // Действие для кнопки 3
+                        if (game->all_sound_on) {
+                            fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
+                            game->background_music_on = false;
+                            game->all_sound_on = false;
+                        } else {
+                            game->all_sound_on = true;
+                            game->background_music_on = true;
+                        }
                         break;
                     case 3:
                         game->running = DONT_RUNNING;  // "EXIT"
@@ -41,15 +55,33 @@ void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext*
                 }
                 break;
         }
+    }
 
-        if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
-            int mouse_x = event->button.x;  // 🆕 получаем X координату
-            int mouse_y = event->button.y;
+    if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
+        int mouse_x = event->button.x;  // 🆕 получаем X координату
+        int mouse_y = event->button.y;
 
-            if (mouse_x >= 0 && mouse_x <= 170 && mouse_y >= 0 && mouse_y <= 60) {
-                game->game_state = STATE_PLAYING;
-            } else if (mouse_x >= 125 && mouse_x <= 255 && mouse_y >= 650 && mouse_y <= 690) {
-                game->running = DONT_RUNNING;
+        if (mouse_x >= 0 && mouse_x <= 170 && mouse_y >= 0 && mouse_y <= 60) {
+            game->game_state = STATE_PLAYING;
+        } else if (mouse_x >= 125 && mouse_x <= 255 && mouse_y >= 650 && mouse_y <= 690) {
+            game->running = DONT_RUNNING;
+        } else if (mouse_x >= 229 && mouse_x <= 328 && mouse_y >= 490 && mouse_y <= 554) {
+            if (game->background_music_on) {
+                fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
+                game->background_music_on = false;
+            } else {
+                play_background(audio);
+                game->background_music_on = true;
+            }
+        } else if (mouse_x >= 229 && mouse_x <= 328 && mouse_y >= 574 && mouse_y <= 638) {
+            if (game->all_sound_on) {
+                fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
+                game->background_music_on = false;
+                game->all_sound_on = false;
+            } else {
+                game->all_sound_on = true;
+                play_background(audio);
+                game->background_music_on = true;
             }
         }
     }
@@ -175,11 +207,19 @@ void create_sound_control(const GraphicsContext* ctx, const GameState* game, SDL
         SDL_SetRenderDrawColor(ctx->renderer, yellow.r, yellow.g, yellow.b, 255);
         SDL_RenderDrawRect(ctx->renderer, &place_for_backgroun_buttom);
     }
-    SDL_RenderCopy(ctx->renderer, ctx->button_on, NULL, &place_for_backgroun_buttom);
+    SDL_RenderCopy(ctx->renderer, game->background_music_on ? ctx->button_on : ctx->button_off, NULL,
+                   &place_for_backgroun_buttom);
 
+    SDL_SetRenderDrawColor(ctx->renderer, white.r, white.g, white.b, 255);
+    render_text(ctx, "all sounds", 75, 590, white, 1);
     SDL_Rect place_for_all_sound_buttom;
     place_for_all_sound_buttom = (SDL_Rect){.x = 229, .y = 574, .w = 99, .h = 64};
-    SDL_RenderCopy(ctx->renderer, ctx->button_on, NULL, &place_for_all_sound_buttom);
+    if (game->menu_selection == 2) {
+        SDL_SetRenderDrawColor(ctx->renderer, yellow.r, yellow.g, yellow.b, 255);
+        SDL_RenderDrawRect(ctx->renderer, &place_for_all_sound_buttom);
+    }
+    SDL_RenderCopy(ctx->renderer, game->all_sound_on ? ctx->button_on : ctx->button_off, NULL,
+                   &place_for_all_sound_buttom);
 }
 
 void reset_game_for_new_match(GameState* game, const GraphicsContext* ctx, const GameLandmarks* landmarks) {

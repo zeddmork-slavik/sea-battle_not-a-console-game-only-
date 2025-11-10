@@ -3,9 +3,10 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <stdbool.h>
 #include <stdint.h>  // для uint32_t
 
-#define DELAY_FIRE_CANON 500  // 0.5 секунды
+#define DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED 500  // 0.5 секунды
 #define PLAYER_CANNON_PIVOT_X 90
 #define PLAYER_CANNON_PIVOT_Y 55
 #define COMPUTER_CANNON_PIVOT_X 105
@@ -148,8 +149,8 @@ typedef struct GameState {
     unsigned char spray_alpha;
     GameAudio* audio;
     FireNode* active_fires;  // 🆕 стек активных огней
-    char background_music_on;
-    char all_sound_on;
+    bool background_music_on;
+    bool all_sound_on;
     unsigned char game_state;  // 🆕 STATE_MENU или STATE_PLAYING
     unsigned char menu_selection;
 } GameState;

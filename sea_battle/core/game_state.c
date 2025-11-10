@@ -40,7 +40,7 @@ GameLandmarks calculate_landmarks(const GraphicsContext* ctx) {
 void init_cannon(Cannon* cannon, char is_player, int base_x, int base_y, SDL_Renderer* renderer) {
     cannon->base_x = base_x;
     cannon->base_y = base_y;
-    cannon->fire_delay = DELAY_FIRE_CANON;
+    cannon->fire_delay = DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED;
     cannon->current_alpha = STARTING_TRANSPARENCY;
     cannon->rotation_speed = 45.0;  // градусов в секунду (1.5° за кадр при 30 FPS)
 
