@@ -9,54 +9,7 @@
 #include "graphics/ships.h"
 
 void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext* ctx, GameAudio* audio) {
-    if (event->type == SDL_KEYDOWN) {
-        switch (event->key.keysym.sym) {
-            case SDLK_UP:
-                if (game->menu_selection > 0) {
-                    game->menu_selection--;
-                } else {
-                    game->menu_selection = 3;
-                }
-                break;
-            case SDLK_DOWN:
-                if (game->menu_selection < 3) {
-                    game->menu_selection++;
-                } else {
-                    game->menu_selection = 0;
-                }
-                break;
-            case SDLK_RETURN:  // enter
-                switch (game->menu_selection) {
-                    case 0:
-                        game->game_state = STATE_PLAYING;  // "START GAME"
-                        break;
-                    case 1:
-                        if (game->background_music_on) {
-                            fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
-                            game->background_music_on = false;
-                        } else {
-                            play_background(audio);
-                            game->background_music_on = true;
-                        }
-                        break;
-                    case 2:
-                        if (game->all_sound_on) {
-                            fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
-                            game->background_music_on = false;
-                            game->all_sound_on = false;
-                        } else {
-                            game->all_sound_on = true;
-                            game->background_music_on = true;
-                        }
-                        break;
-                    case 3:
-                        game->running = DONT_RUNNING;  // "EXIT"
-                        break;
-                }
-                break;
-        }
-    }
-
+    switching_with_arrows(game, event, audio);
     if (event->type == SDL_MOUSEBUTTONDOWN && event->button.button == SDL_BUTTON_LEFT) {
         int mouse_x = event->button.x;  // 🆕 получаем X координату
         int mouse_y = event->button.y;
@@ -87,6 +40,62 @@ void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext*
     }
 }
 
+void switching_with_arrows(GameState* game, SDL_Event* event, GameAudio* audio) {
+    if (event->type == SDL_KEYDOWN) {
+        switch (event->key.keysym.sym) {
+            case SDLK_UP:
+                if (game->menu_selection > 0) {
+                    game->menu_selection--;
+                } else {
+                    game->menu_selection = 3;
+                }
+                break;
+            case SDLK_DOWN:
+                if (game->menu_selection < 3) {
+                    game->menu_selection++;
+                } else {
+                    game->menu_selection = 0;
+                }
+                break;
+            case SDLK_RETURN:  // enter
+                select_submenu_Inter(game, audio);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void select_submenu_Inter(GameState* game, GameAudio* audio) {
+    switch (game->menu_selection) {
+        case 0:
+            game->game_state = STATE_PLAYING;  // "START GAME"
+            break;
+        case 1:
+            if (game->background_music_on) {
+                fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
+                game->background_music_on = false;
+            } else {
+                play_background(audio);
+                game->background_music_on = true;
+            }
+            break;
+        case 2:
+            if (game->all_sound_on) {
+                fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
+                game->background_music_on = false;
+                game->all_sound_on = false;
+            } else {
+                game->all_sound_on = true;
+                game->background_music_on = true;
+            }
+            break;
+        case 3:
+            game->running = DONT_RUNNING;  // "EXIT"
+            break;
+    }
+}
+
 void render_main_menu(const GraphicsContext* ctx, const GameState* game, GameAudio* audio) {
     // Черный фон
     SDL_SetRenderDrawColor(ctx->renderer, 0, 0, 0, 255);
@@ -96,29 +105,39 @@ void render_main_menu(const GraphicsContext* ctx, const GameState* game, GameAud
     SDL_Color yellow = {255, 255, 0, 255};
     SDL_Color gray = {128, 128, 128, 255};
 
-    draw_menu_bg(ctx);
+    draw_menu_bg_image(ctx);
+    render_start_game(ctx, game, white, yellow);
 
-    // КНОПКА "НОВАЯ ИГРА"
+    draw_menu_ships_count(ctx, white);
+
+    create_sound_control(ctx, game, white, yellow);
+    render_exit(ctx, game, white, yellow);
+
+    SDL_RenderPresent(ctx->renderer);
+}
+
+void draw_menu_bg_image(const GraphicsContext* ctx) {
+    SDL_Rect menu_bg = {
+        .x = 370,
+        .y = 0,
+        .w = 899,
+        .h = 700,
+    };
+    SDL_RenderCopy(ctx->renderer, ctx->menu_bg, NULL, &menu_bg);
+}
+
+void render_start_game(const GraphicsContext* ctx, const GameState* game, SDL_Color white, SDL_Color yellow) {
     SDL_Color new_game_color = (game->menu_selection == 0) ? yellow : white;
     SDL_Rect new_game_rect = {0, 0, 370, 74};
     SDL_SetRenderDrawColor(ctx->renderer, new_game_color.r, new_game_color.g, new_game_color.b, 255);
     render_text(ctx, "START GAME", 10, 10, new_game_color, 2);
+}
 
-    form_vertical_text(ctx, white);
-
-    draw_ship(ctx, 100, 170, 0, 0, 0, 4, ctx->ship_jup_4p);
-    draw_ship(ctx, 158, 250, 0, 0, 0, 3, ctx->ship_jup_3p);
-    draw_ship(ctx, 212, 330, 0, 0, 0, 2, ctx->ship_jup_2p);
-    draw_ship(ctx, 265, 410, 0, 0, 0, 1, ctx->ship_jup_1p);
-
-    create_sound_control(ctx, game, white, yellow);
-
+void render_exit(const GraphicsContext* ctx, const GameState* game, SDL_Color white, SDL_Color yellow) {
     SDL_Color exit_color = (game->menu_selection == 3) ? yellow : white;
     SDL_Rect exit_rect = {125, 650, 130, 40};
     SDL_SetRenderDrawColor(ctx->renderer, exit_color.r, exit_color.g, exit_color.b, 255);
     render_text(ctx, "EXIT", 125, 650, exit_color, 1);
-
-    SDL_RenderPresent(ctx->renderer);
 }
 
 void form_vertical_text(const GraphicsContext* ctx, SDL_Color white) {
@@ -138,6 +157,14 @@ void form_vertical_text(const GraphicsContext* ctx, SDL_Color white) {
     render_single_char(ctx, 'y', y_rect.x, y_rect.y, white);
     render_single_char(ctx, 'e', e_rect.x, e_rect.y, white);
     render_single_char(ctx, 't', t_rect.x, t_rect.y, white);
+}
+
+void draw_menu_ships_count(const GraphicsContext* ctx, SDL_Color white) {
+    form_vertical_text(ctx, white);
+    draw_ship(ctx, 100, 170, 0, 0, 0, 4, ctx->ship_jup_4p);
+    draw_ship(ctx, 158, 250, 0, 0, 0, 3, ctx->ship_jup_3p);
+    draw_ship(ctx, 212, 330, 0, 0, 0, 2, ctx->ship_jup_2p);
+    draw_ship(ctx, 265, 410, 0, 0, 0, 1, ctx->ship_jup_1p);
 }
 
 void render_text(const GraphicsContext* ctx, const char* text, int x, int y, SDL_Color color, int size) {
@@ -176,7 +203,7 @@ void render_single_char(const GraphicsContext* ctx, char ch, int x, int y, SDL_C
 }
 
 void render_text_with_shadow(const GraphicsContext* ctx, const char* text, int x, int y,
-                             SDL_Color text_color) {
+                             SDL_Color text_color) {  // оставлю для надписей на фоне рисунка
     if (!ctx->menu_small_font) return;
 
     // Тень (смещенная копия текста)
@@ -201,6 +228,14 @@ void create_sound_control(const GraphicsContext* ctx, const GameState* game, SDL
     SDL_SetRenderDrawColor(ctx->renderer, white.r, white.g, white.b, 255);
     render_text(ctx, "song of the sea", 25, 500, white, 1);
 
+    render_background_buttom(ctx, game, yellow);
+
+    SDL_SetRenderDrawColor(ctx->renderer, white.r, white.g, white.b, 255);
+    render_text(ctx, "all sounds", 75, 590, white, 1);
+    render_all_soubds_buttom(ctx, game, yellow);
+}
+
+void render_background_buttom(const GraphicsContext* ctx, const GameState* game, SDL_Color yellow) {
     SDL_Rect place_for_backgroun_buttom;
     place_for_backgroun_buttom = (SDL_Rect){.x = 229, .y = 490, .w = 99, .h = 64};
     if (game->menu_selection == 1) {
@@ -209,9 +244,9 @@ void create_sound_control(const GraphicsContext* ctx, const GameState* game, SDL
     }
     SDL_RenderCopy(ctx->renderer, game->background_music_on ? ctx->button_on : ctx->button_off, NULL,
                    &place_for_backgroun_buttom);
+}
 
-    SDL_SetRenderDrawColor(ctx->renderer, white.r, white.g, white.b, 255);
-    render_text(ctx, "all sounds", 75, 590, white, 1);
+void render_all_soubds_buttom(const GraphicsContext* ctx, const GameState* game, SDL_Color yellow) {
     SDL_Rect place_for_all_sound_buttom;
     place_for_all_sound_buttom = (SDL_Rect){.x = 229, .y = 574, .w = 99, .h = 64};
     if (game->menu_selection == 2) {
