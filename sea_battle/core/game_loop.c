@@ -34,7 +34,7 @@ void run_game(const GraphicsContext* ctx,
 
     game.audio = audio_initialization();
 
-    play_background(game.audio);
+    play_background(&game);
 
     event_processing(&game, ctx, landmarks, game.audio);
 

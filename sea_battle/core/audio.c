@@ -51,27 +51,27 @@ GameAudio* load_audio() {
     return audio;
 }
 
-void play_cannon_shot(GameAudio* audio) {
-    if (audio && audio->cannon_shot) {
-        Mix_PlayChannel(-1, audio->cannon_shot, 0);  // автовыбор потока, ,количество повторений
+void play_cannon_shot(GameState* game) {
+    if (game->audio && game->audio->cannon_shot && game->all_sound_on) {
+        Mix_PlayChannel(-1, game->audio->cannon_shot, 0);  // автовыбор потока, ,количество повторений
     }
 }
 
-void play_water_splash(GameAudio* audio) {
-    if (audio && audio->water_splash) {
-        Mix_PlayChannel(-1, audio->water_splash, 0);
+void play_water_splash(GameState* game) {
+    if (game->audio && game->audio->water_splash && game->all_sound_on) {
+        Mix_PlayChannel(-1, game->audio->water_splash, 0);
     }
 }
 
-void play_ship_hit(GameAudio* audio) {
-    if (audio && audio->ship_hit) {
-        Mix_PlayChannel(-1, audio->ship_hit, 0);
+void play_ship_hit(GameState* game) {
+    if (game->audio && game->audio->ship_hit && game->all_sound_on) {
+        Mix_PlayChannel(-1, game->audio->ship_hit, 0);
     }
 }
 
-void play_background(GameAudio* audio) {
-    if (audio && audio->background) {
-        Mix_PlayMusic(audio->background, -1);
+void play_background(GameState* game) {
+    if (game->audio && game->audio->background && game->background_music_on) {
+        Mix_PlayMusic(game->audio->background, -1);
     }
 }
 

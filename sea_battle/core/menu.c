@@ -23,8 +23,8 @@ void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext*
                 fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
                 game->background_music_on = false;
             } else {
-                play_background(audio);
                 game->background_music_on = true;
+                play_background(game);
             }
         } else if (mouse_x >= 229 && mouse_x <= 328 && mouse_y >= 574 && mouse_y <= 638) {
             if (game->all_sound_on) {
@@ -33,8 +33,8 @@ void handle_menu_input(GameState* game, SDL_Event* event, const GraphicsContext*
                 game->all_sound_on = false;
             } else {
                 game->all_sound_on = true;
-                play_background(audio);
                 game->background_music_on = true;
+                play_background(game);
             }
         }
     }
@@ -76,7 +76,7 @@ void select_submenu_Inter(GameState* game, GameAudio* audio) {
                 fade_out_background_music(DELAY_FIRE_CANON_OR_TIME_BAKGROUND_MUSIC_FADED);
                 game->background_music_on = false;
             } else {
-                play_background(audio);
+                play_background(game);
                 game->background_music_on = true;
             }
             break;

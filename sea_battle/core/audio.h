@@ -1,6 +1,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+typedef struct GameState GameState;
 typedef struct Mix_Chunk Mix_Chunk;
 typedef struct Mix_Music Mix_Music;
 
@@ -15,10 +16,10 @@ typedef struct GameAudio {
 
 GameAudio* audio_initialization();
 GameAudio* load_audio();
-void play_cannon_shot(GameAudio* audio);
-void play_water_splash(GameAudio* audio);
-void play_ship_hit(GameAudio* audio);
-void play_background(GameAudio* audio);
+void play_cannon_shot(GameState* game);
+void play_water_splash(GameState* game);
+void play_ship_hit(GameState* game);
+void play_background(GameState* game);
 void fade_out_background_music(int fade_time_ms);
 // void play_victory(GameAudio* audio);
 void cleanup_audio(GameAudio* audio);

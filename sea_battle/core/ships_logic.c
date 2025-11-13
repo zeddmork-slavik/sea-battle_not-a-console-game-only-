@@ -15,13 +15,13 @@ void process_shot_result(const GraphicsContext* ctx, GameState* game, const Game
         game->spray_y = landmarks->offset_y + (int)game->cannonball.target_cell_y * ctx->cell_size -
                         Y_CRUTCH_FOR_SPLASHES;
         game->spray_alpha = STARTING_TRANSPARENCY;
-        play_water_splash(audio);
+        play_water_splash(game);
     }
 
     if (game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] == 1) {
         game->computer_board->cells[game->cannonball.target_cell_x][game->cannonball.target_cell_y] = 2;
         add_fire_to_stack(game, game->cannonball.target_cell_x, game->cannonball.target_cell_y, current_time);
-        play_ship_hit(audio);
+        play_ship_hit(game);
     }
     /*
     → check_hit_or_miss()
