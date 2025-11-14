@@ -6,29 +6,32 @@
 #include "core/game_state.h"
 
 void auto_arrange_ships(GameBoard* board) {
-    for (char i = 0; i < MAX_SHIPS; i++) {  // расставляем количество палуб
+    for (int i = 0; i < MAX_SHIPS; i++) {  // расставляем количество палуб
         board->ships[i].deck_count = i < 5 ? 1 : 2;
     }
 
-    const char max_attempts_per_ship = 50;
+    for (int ship_index = 0; ship_index < MAX_SHIPS; ship_index++) {
+        auto_arrange_one_ship(board, &ship_index);
+    }
+}
 
-    for (char ship_index = 0; ship_index < MAX_SHIPS; ship_index++) {
-        char attempts = 0;
-        char success = 0;
-
-        while (!success && attempts < max_attempts_per_ship) {
-            char x = rand() % GRID_SIZE;
-            char y = rand() % GRID_SIZE;
-            char direction = 0;
-            if (check_place_for_first_deck(board, x, y)) {
-                if (board->ships[ship_index].deck_count == 1) {
-                    add_ship_to_gameBoard(board, x, y, ship_index, direction);
-                    success = 1;
-                } else if (place_for_others_decks(board, &x, &y, board->ships[ship_index].deck_count,
-                                                  &direction)) {
-                    add_ship_to_gameBoard(board, x, y, ship_index, direction);
+void auto_arrange_one_ship(GameBoard* board, int* ship_index) {
+    const int max_attempts_per_ship = 50;
+    int attempts = 0;
+    bool success = false;
+    while (!success && attempts < max_attempts_per_ship) {
+        char x = rand() % GRID_SIZE;
+        char y = rand() % GRID_SIZE;
+        char direction = 0;
+        if (check_place_for_first_deck(board, x, y)) {  // поработать с взаимоисключениями
+            if (board->ships[*ship_index].deck_count == 1) {
+                add_ship_to_gameBoard(board, x, y, *ship_index, direction);
+                success = true;
+            } else if (place_for_second_deck(board, &x, &y, &direction)) {
+                if (board->ships[*ship_index].deck_count == 2) {
+                    add_ship_to_gameBoard(board, x, y, *ship_index, direction);
                     ;
-                    success = 1;
+                    success = true;
                 }
             }
             attempts++;
@@ -40,9 +43,7 @@ void add_ship_to_gameBoard(GameBoard* board, char x, char y, const char ship_ind
     board->ships[ship_index].x = x;
     board->ships[ship_index].y = y;
 
-    board->ships[ship_index].direction =
-        direction;  // direction дефолтный 0 хотел через условие чтобы не присваивать одно и то же, но кит
-                    // говорит так оптимальнее
+    board->ships[ship_index].direction = direction;
 
     for (char placed_deck = 0; placed_deck < board->ships[ship_index].deck_count; placed_deck++) {
         board->cells[x][y] = CELL_SHIP;
@@ -50,59 +51,6 @@ void add_ship_to_gameBoard(GameBoard* board, char x, char y, const char ship_ind
     }
 
     board->ship_count++;
-}
-
-char place_for_others_decks(const GameBoard* board, char* x, char* y, const char deck_count,
-                            char* direction) {
-    char flag = 0;
-    char valid_mask = 0;
-
-    // 2. Включаем выключатели для валидных направлений
-    if (can_go_left(board, *x, *y)) valid_mask |= (1 << LEFT);    // включили LEFT
-    if (can_go_right(board, *x, *y)) valid_mask |= (1 << RIGHT);  // включили RIGHT
-    if (can_go_up(board, *x, *y)) valid_mask |= (1 << UP);        // включили UP
-    if (can_go_down(board, *x, *y)) valid_mask |= (1 << DOWN);    // включили DOWN
-
-    char direction_for_growing = select_random_direction(valid_mask);
-
-    if (direction_for_growing != INVALID_DIRECTION) {
-        flag = 1;
-
-        if (direction_for_growing == UP || direction_for_growing == DOWN) {
-            *direction = 1;
-        }
-
-        if (direction_for_growing == LEFT) {
-            *x -= 1;
-        }  // !!!!!!!!!!! пока только для вершины двухпалубных, для трёшек нужно будет учитывать все
-           // направления
-        if (direction_for_growing == UP) {
-            *y -= 1;
-        }
-    }
-    return flag;
-}
-
-char select_random_direction(const char valid_mask) {
-    char count = 0;
-    char directions[4];  // Массив для валидных направлений
-    char selected_direction = INVALID_DIRECTION;
-
-    // Собираем все валидные направления в массив
-    for (char i = 0; i < 4; i++) {
-        if (valid_mask & (1 << i)) {
-            directions[count] = i;
-            count++;
-        }
-    }
-
-    // Выбираем случайное из собранных
-    if (count > 0) {
-        char random_index = rand() % count;
-        selected_direction = directions[random_index];
-    }
-
-    return selected_direction;
 }
 
 char check_place_for_first_deck(const GameBoard* board, const char x, const char y) {
@@ -265,4 +213,103 @@ char can_go_down(const GameBoard* board, char x, char y) {
     }
 
     return flag;
+}
+
+bool place_for_second_deck(const GameBoard* board, char* x, char* y, char* direction) {
+    bool success = false;
+    char valid_mask = 0;
+
+    // 2. Включаем выключатели для валидных направлений
+    if (can_go_left(board, *x, *y)) valid_mask |= (1 << LEFT);    // включили LEFT
+    if (can_go_right(board, *x, *y)) valid_mask |= (1 << RIGHT);  // включили RIGHT
+    if (can_go_up(board, *x, *y)) valid_mask |= (1 << UP);        // включили UP
+    if (can_go_down(board, *x, *y)) valid_mask |= (1 << DOWN);    // включили DOWN
+
+    char direction_for_growing = select_random_direction(valid_mask);
+
+    if (direction_for_growing != INVALID_DIRECTION) {
+        success = true;
+
+        if (direction_for_growing == UP || direction_for_growing == DOWN) {
+            *direction = 1;
+        }
+
+        if (direction_for_growing == LEFT) {
+            *x -= 1;
+        }  // !!!!!!!!!!! пока только для вершины двухпалубных, для трёшек нужно будет учитывать все
+           // направления
+        if (direction_for_growing == UP) {
+            *y -= 1;
+        }
+    }
+    return success;
+}
+
+char select_random_direction(const char valid_mask) {
+    char count = 0;
+    char directions[4];  // Массив для валидных направлений
+    char selected_direction = INVALID_DIRECTION;
+
+    // Собираем все валидные направления в массив
+    for (char i = 0; i < 4; i++) {
+        if (valid_mask & (1 << i)) {
+            directions[count] = i;
+            count++;
+        }
+    }
+
+    // Выбираем случайное из собранных
+    if (count > 0) {
+        char random_index = rand() % count;
+        selected_direction = directions[random_index];
+    }
+
+    return selected_direction;
+}
+
+bool place_for_therd_deck(const GameBoard* board, char* x1, char* y1, char* direction) {
+    bool success = false;
+    char valid_mask = 0;
+    char x2, y2;
+    if (*direction == 0) {
+        place_for_therd_gorizontal_deck(board, x1, y1, &x2, &y2, &valid_mask, &success);
+    } else {
+        place_for_therd_vertical_deck(board, x1, y1, &x2, &y2, &valid_mask, &success);
+    }
+
+    char direction_for_growing = select_random_direction(
+        valid_mask);  // универсальную для 3и 4 я то напишу, получитсч ли совместить с 2х?
+
+    if (direction_for_growing != INVALID_DIRECTION) {
+        success = true;
+
+        if (direction_for_growing == UP || direction_for_growing == DOWN) {
+        }
+
+        if (direction_for_growing == LEFT) {
+            *x -= 1;
+        }  // !!!!!!!!!!! пока только для вершины двухпалубных, для трёшек нужно будет учитывать все
+           // направления
+        if (direction_for_growing == UP) {
+            *y -= 1;
+        }
+    }
+    return success;
+}
+
+void place_for_therd_gorizontal_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
+                                     char* valid_mask, bool* success) {
+    *x2 = *x1 + 1;
+    *y2 = *y1;
+    if (can_go_left(board, *x1, *y1)) valid_mask |= (1 << LEFT);
+    if (can_go_right(board, *x2, *y2)) valid_mask |= (1 << RIGHT);
+}
+
+void place_for_therd_vertical_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
+                                   char* valid_mask, bool* success) {
+    *x2 = *x1;
+    *y2 = *y1 + 1;
+    if (can_go_up(board, *x1, *y1)) *valid_mask |= (1 << UP);
+    if (can_go_down(board, *x2, *y2)) *valid_mask |= (1 << DOWN);
+    return *valid_mask;
 }
