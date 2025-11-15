@@ -267,7 +267,7 @@ char select_random_direction(const char valid_mask) {
     return selected_direction;
 }
 
-bool place_for_therd_deck(const GameBoard* board, char* x1, char* y1, char* direction) {
+bool place_for_multy_deck(const GameBoard* board, char* x1, char* y1, char* direction) {
     bool success = false;
     char valid_mask = 0;
     char x2, y2;
@@ -276,24 +276,7 @@ bool place_for_therd_deck(const GameBoard* board, char* x1, char* y1, char* dire
     } else {
         place_for_therd_vertical_deck(board, x1, y1, &x2, &y2, &valid_mask, &success);
     }
-
-    char direction_for_growing = select_random_direction(
-        valid_mask);  // универсальную для 3и 4 я то напишу, получитсч ли совместить с 2х?
-
-    if (direction_for_growing != INVALID_DIRECTION) {
-        success = true;
-
-        if (direction_for_growing == UP || direction_for_growing == DOWN) {
-        }
-
-        if (direction_for_growing == LEFT) {
-            *x -= 1;
-        }  // !!!!!!!!!!! пока только для вершины двухпалубных, для трёшек нужно будет учитывать все
-           // направления
-        if (direction_for_growing == UP) {
-            *y -= 1;
-        }
-    }
+    growing(&valid_mask, x1, y1, &success);
     return success;
 }
 
@@ -312,4 +295,19 @@ void place_for_therd_vertical_deck(const GameBoard* board, char* x1, char* y1, c
     if (can_go_up(board, *x1, *y1)) *valid_mask |= (1 << UP);
     if (can_go_down(board, *x2, *y2)) *valid_mask |= (1 << DOWN);
     return *valid_mask;
+}
+
+void growing(char* valid_mask, char* x, char* y, bool* success) {
+    char direction_for_growing = select_random_direction(valid_mask);
+
+    if (direction_for_growing != INVALID_DIRECTION) {
+        *success = true;
+
+        if (direction_for_growing == LEFT) {
+            *x -= 1;
+        }
+        if (direction_for_growing == UP) {
+            *y -= 1;
+        }
+    }
 }
