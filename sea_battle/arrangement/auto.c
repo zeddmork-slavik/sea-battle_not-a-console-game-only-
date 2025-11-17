@@ -23,19 +23,39 @@ void auto_arrange_one_ship(GameBoard* board, int* ship_index) {
         char x = rand() % GRID_SIZE;
         char y = rand() % GRID_SIZE;
         char direction = 0;
-        if (check_place_for_first_deck(board, x, y)) {  // поработать с взаимоисключениями
-            if (board->ships[*ship_index].deck_count == 1) {
-                add_ship_to_gameBoard(board, x, y, *ship_index, direction);
-                success = true;
-            } else if (place_for_second_deck(board, &x, &y, &direction)) {
-                if (board->ships[*ship_index].deck_count == 2) {
-                    add_ship_to_gameBoard(board, x, y, *ship_index, direction);
-                    ;
-                    success = true;
+        bool valid_base = false;
+        bool can_grow = true;
+
+        valid_base = check_place_for_first_deck(board, x, y);
+
+        if (valid_base) {
+            char placed_decks = 1;
+            char target_decks = board->ships[*ship_index].deck_count;
+
+            while (can_grow && placed_decks < target_decks) {
+                bool grew = false;
+
+                if (placed_decks == 1) {
+                    grew = place_for_second_deck(board, &x, &y, &direction);
+                } else if (placed_decks == 2) {
+                    grew = place_for_multy_deck(board, &x, &y, &direction, placed_decks);
+                } else if (placed_decks == 3) {
+                    grew = place_for_multy_deck(board, &x, &y, &direction, placed_decks);
+                }
+
+                can_grow = grew;
+                if (can_grow) {
+                    placed_decks++;
                 }
             }
-            attempts++;
+
+            if (placed_decks == target_decks) {
+                add_ship_to_gameBoard(board, x, y, *ship_index, direction);  // проверь на 3 и 4!!!
+                success = true;
+            }
         }
+
+        attempts++;
     }
 }
 
@@ -267,34 +287,52 @@ char select_random_direction(const char valid_mask) {
     return selected_direction;
 }
 
-bool place_for_multy_deck(const GameBoard* board, char* x1, char* y1, char* direction) {
+bool place_for_multy_deck(const GameBoard* board, char* x1, char* y1, char* direction,
+                          const char placed_decks) {
     bool success = false;
     char valid_mask = 0;
     char x2, y2;
     if (*direction == 0) {
-        place_for_therd_gorizontal_deck(board, x1, y1, &x2, &y2, &valid_mask, &success);
+        place_for_next_gorizontal_deck(board, x1, y1, &x2, &y2, &valid_mask, &success, placed_decks);
     } else {
-        place_for_therd_vertical_deck(board, x1, y1, &x2, &y2, &valid_mask, &success);
+        place_for_next_vertical_deck(board, x1, y1, &x2, &y2, &valid_mask, &success, placed_decks);
     }
     growing(&valid_mask, x1, y1, &success);
     return success;
 }
 
-void place_for_therd_gorizontal_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
-                                     char* valid_mask, bool* success) {
-    *x2 = *x1 + 1;
+void place_for_next_gorizontal_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
+                                    char* valid_mask, const char placed_decks) {
     *y2 = *y1;
-    if (can_go_left(board, *x1, *y1)) valid_mask |= (1 << LEFT);
-    if (can_go_right(board, *x2, *y2)) valid_mask |= (1 << RIGHT);
+    if (current_decks == 2) {
+        *x2 = *x1 + 1;
+
+    } else {
+        *x2 = *x1 + 2;
+    }
+
+    if (can_go_left(board, *x1, *y1)) {
+        valid_mask |= (1 << LEFT);
+    }
+    if (can_go_right(board, *x2, *y2)) {
+        valid_mask |= (1 << RIGHT);
+    }
 }
 
-void place_for_therd_vertical_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
-                                   char* valid_mask, bool* success) {
+void place_for_next_vertical_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
+                                  char* valid_mask, const char placed_decks) {
     *x2 = *x1;
-    *y2 = *y1 + 1;
-    if (can_go_up(board, *x1, *y1)) *valid_mask |= (1 << UP);
-    if (can_go_down(board, *x2, *y2)) *valid_mask |= (1 << DOWN);
-    return *valid_mask;
+    if (current_decks == 2) {
+        *y2 = *y1 + 1;
+    } else {
+        *y2 = *y1 + 2;
+    }
+    if (can_go_up(board, *x1, *y1)) {
+        *valid_mask |= (1 << UP);
+    }
+    if (can_go_down(board, *x2, *y2)) {
+        *valid_mask |= (1 << DOWN);
+    }
 }
 
 void growing(char* valid_mask, char* x, char* y, bool* success) {

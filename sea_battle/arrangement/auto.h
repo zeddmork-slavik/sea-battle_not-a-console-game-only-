@@ -15,10 +15,11 @@ char can_go_up(const GameBoard* board, char x, char y);
 char can_go_down(const GameBoard* board, char x, char y);
 bool place_for_second_deck(const GameBoard* board, char* x, char* y, char* direction);
 char select_random_direction(const char valid_mask);
-/*
-bool place_for_therd_deck(const GameBoard* board, char* x1, char* y1, char* direction);
-bool* place_for_therd_gorizontal_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
-                                      char* valid_mask, bool* success);
-bool* place_for_therd_vertical_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
-                                    char* valid_mask, bool* success);*/
+bool place_for_multy_deck(const GameBoard* board, char* x1, char* y1, char* direction,
+                          const char placed_decks);
+void place_for_next_gorizontal_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
+                                    char* valid_mask, const char placed_decks);
+void place_for_next_vertical_deck(const GameBoard* board, char* x1, char* y1, char* x2, char* y2,
+                                  char* valid_mask, const char placed_decks);
+void growing(char* valid_mask, char* x, char* y, bool* success);
 #endif
